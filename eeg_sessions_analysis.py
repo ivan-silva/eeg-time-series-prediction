@@ -157,7 +157,7 @@ def eeg_session_analysis():
     start = 0
     end = start + train_split
 
-    prediction_index = 1
+    prediction_index = 7
     x_train = train_data[[i for i in range(len(selected_parameters))]].values
     y_train = features.iloc[start:end][[prediction_index]]
 
@@ -231,23 +231,22 @@ def eeg_session_analysis():
         callbacks=[es_callback, modelckpt_callback],
     )
 
-    def visualize_loss(history, title):
-        loss = history.history["loss"]
-        val_loss = history.history["val_loss"]
+    def visualize_loss(loss_history):
+        loss = loss_history.history["loss"]
+        val_loss = loss_history.history["val_loss"]
         epochs = range(len(loss))
         plt.figure()
         plt.title(f"Training loss and validation loss: {titles[prediction_index]}")
         plt.plot(epochs, loss, colors[0], label="Training loss")
         plt.plot(epochs, val_loss, colors[1], label="Validation loss")
-        plt.title(title)
         plt.xlabel("Epochs")
         plt.ylabel("Loss")
         plt.legend()
-        plt.savefig('images\\loss_val_loss.png')
+        plt.savefig(f'images\\loss_val_loss_{titles[prediction_index]}.png')
         plt.show()
         plt.close()
 
-    visualize_loss(history, "Training and Validation Loss")
+    visualize_loss(history)
 
     predictions = model.predict(dataset_val)
     predictions_x = []
@@ -271,6 +270,6 @@ def eeg_session_analysis():
              c=colors[5])
     plt.plot(predictions_x, predictions_y, label=f"{titles[prediction_index]} predictions", linestyle="", marker='x', fillstyle='none')
     plt.legend()
-    plt.savefig('images\\dataset_predictions.png')
+    plt.savefig(f'images\\dataset_predictions_{titles[prediction_index]}.png')
     plt.show()
     plt.close()
