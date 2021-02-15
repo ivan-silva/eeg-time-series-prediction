@@ -86,7 +86,7 @@ _________________________________________________________________
 
 I dati di training sono stati espansi tramite [`timeseries_dataset_from_array`](https://www.tensorflow.org/api_docs/python/tf/keras/preprocessing/timeseries_dataset_from_array), utilizzando i seguenti parametri
 
-```
+``` 
 sequence_length = 1
 sampling_rate = 1
 sequence_stride = 1  
@@ -163,11 +163,92 @@ Prossimi passi:
   - La produzione dei plot
 - Creare multiplot
 
+## Categorizzazione e risoluzione di problemi
+
+### Data una sequenza monodimensionale predirne il continuo
+
+#### Dati
+
+Array colonna di dati float
+$$
+dataset = (a_1, a_2, \dots, a_m)' = 
+
+\begin{bmatrix} 
+a_1 \\ a_2 \\ \vdots \\ a_m
+\end{bmatrix}
+$$
+
+#### Model e train
+
+Prendiamo i dati e scegliamo un indice $i$ che divida tra quelli che useremo per l’allenamento e quelli invece che useremo per la validazione
+$$
+\begin{align}
+train &= (a_1, a_2, \dots, a_{i})' \\
+val &= (a_{i+1}, a_{i+2}, \dots, a_m)'
+\end{align}
+$$
+Sia per i dati di allenamento che per i dati di validazione, generiamo le variabili $input_{L}(x)$ e il $target_L(y)$, dove $L$ è la variabile di *lookback* che ci dice quanti elementi vengono tenuti in considerazione per indovinare l’elemento $a_{L+1}$-esimo
+$$
+\begin{align}
+&\begin{cases}
+input_1 &= (a_1, a_2, \dots, a_{m-1})' 
+\\
+target_1 &= (a_{2}, a_{3}, \dots, a_m)'
+\end{cases}
+\\
+&\begin{cases}
+input_2 &= 
+((a_1, a_2), (a_2, a_3) \dots,(a_{n-2}, a_{m-1}) )' 
+\\
+target_2 &= (a_{3}, a_{4}, \dots, a_m)'
+\end{cases}
+\\
+&\vdots
+\\
+&\begin{cases}
+input_L &= ((a_1, a_2, \dots, a_{L}),\dots,((a_{m-L}, a_{m-(L-1)}, \dots, a_{m-2}, a_{m-1})) )' 
+\\
+target_L &= (a_{L+1}, \dots, a_m)'
+\end{cases}
+\end{align}
+$$
+in forma matriciale
+$$
+\begin{array}{}
+
+I^{(m-L) \times (L)} = 
+\begin{pmatrix}
+a_1 & a_2 & \dots & a_{L-1} & a_{L} \\
+a_2 & a_3 & \dots & a_{L} & a_{L+1} \\
+a_3 & a_4 & \dots & a_{L+1} & a_{L+2} \\
+\vdots & & & & \vdots\\
+a_{(m-1)-L} & a_{(m-1)-(L-1)} & \dots & a_{m-3} & a_{m-2}\\
+a_{m-L} & a_{m-(L-1)} &\dots & a_{m-2} &a_{m-1}
+\end{pmatrix}
+
+&
+T^{m-L \times 1}=
+\begin{pmatrix}
+a_{L+1} \\
+a_{L+2} \\
+a_{L+3} \\
+\vdots \\
+a_{m-1} \\
+a_{m} \\
+\end{pmatrix}
+
+\end{array}
+$$
+
+Il modello utilizzato è il seguente
 
 
+```python
+look_back = 1
 
-
-
-
-
-
+model = Sequential()
+model.add(LSTM(4, input_shape=(1, look_back)))
+model.add(Dense(1))
+model.compile(loss='mean_squared_error', optimizer='adam')
+model.fit(trainX, trainY, epochs=100, batch_size=1, verbose=2)
+```

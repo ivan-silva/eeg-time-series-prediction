@@ -2,6 +2,19 @@ import matplotlib.pyplot as plt
 import itertools
 import numpy as np
 
+colors = [
+    "blue",
+    "orange",
+    "green",
+    "red",
+    "purple",
+    "brown",
+    "pink",
+    "gray",
+    "olive",
+    "cyan",
+]
+
 
 def plot_confusion_matrix(cm, classes, normalize=False, title='Confusion matrix', cmap=plt.cm.Blues):
     """
@@ -40,10 +53,21 @@ def plot_confusion_matrix(cm, classes, normalize=False, title='Confusion matrix'
 
 
 def plot_images(images_arr):
-    fig, axes = plt.subplots(1, 10, figsize=(20,20))
+    fig, axes = plt.subplots(1, 10, figsize=(20, 20))
     axes = axes.flatten()
-    for img, ax in zip( images_arr, axes):
+    for img, ax in zip(images_arr, axes):
         ax.imshow(img)
         ax.axis('off')
     plt.tight_layout()
     plt.show()
+
+
+def plot_predictions(all_data, train_predictions, val_predictions, parameter_name=""):
+    plt.title(f"Predictions: {parameter_name}")
+    plt.plot(all_data, label="Dataset", linestyle="-")
+    plt.plot(train_predictions, label="Train predictions", linestyle="-", fillstyle='none')
+    plt.plot(val_predictions, label="Validation predictions", linestyle="-", fillstyle='none')
+    plt.legend()
+    plt.savefig(f'images\\dataset_predictions_{parameter_name}.png')
+    plt.show()
+    plt.close()
