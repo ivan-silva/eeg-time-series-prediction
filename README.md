@@ -178,6 +178,8 @@ a_1 \\ a_2 \\ \vdots \\ a_m
 \end{bmatrix}
 $$
 
+dove $|dataset| = m$
+
 #### Model e train
 
 Prendiamo i dati e scegliamo un indice $i$ che divida tra quelli che useremo per l’allenamento e quelli invece che useremo per la validazione
@@ -187,7 +189,7 @@ train &= (a_1, a_2, \dots, a_{i})' \\
 val &= (a_{i+1}, a_{i+2}, \dots, a_m)'
 \end{align}
 $$
-Sia per i dati di allenamento che per i dati di validazione, generiamo le variabili $input_{L}(x)$ e il $target_L(y)$, dove $L$ è la variabile di *lookback* che ci dice quanti elementi vengono tenuti in considerazione per indovinare l’elemento $a_{L+1}$-esimo
+Sia per i dati di allenamento che per i dati di validazione, generiamo le variabili $input_{L}(x)$ e il $target_L(y)$, dove $L$ è la variabile di *look back* che ci dice quanti elementi vengono tenuti in considerazione per indovinare l’elemento $a_{L+1}$-esimo
 $$
 \begin{align}
 &\begin{cases}
@@ -240,11 +242,52 @@ a_{m} \\
 \end{array}
 $$
 
+Esempio per $dataset = \{ x \in N: 0< x \le 100 \}$, $m = 100$, $L=10$
+$$
+\begin{array}{}
+
+I^{90 \times 10} = 
+\begin{pmatrix}
+1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 \\
+2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 & 11 \\
+3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 & 11 & 12 \\
+\vdots \\
+98 & 90 & 91 & 92 & 93 & 94 & 95 & 96 & 97 & 98 \\
+90 & 91 & 92 & 93 & 94 & 95 & 96 & 97 & 98 & 99 \\
+\end{pmatrix}
+
+&
+T^{90 \times 1}=
+\begin{pmatrix}
+11 \\
+12 \\
+13 \\
+\vdots \\
+99 \\
+100 \\
+\end{pmatrix}
+
+\end{array}
+$$
+
+Prendiamo un valore di split $0<ts<$ abbiamo che le predizioni saranno
+$$
+\begin{align}
+|p_t| &= m - L \\
+P_{train} &= \{a_i, \ {L}<i\le ts : p_i = model.predict((a_{i-L}, \dots, a_{i-1}) \} \\
+P_{val} &= \{a_i, \ {ts + L}<i\le n : p_i = model.predict((a_{i-L}, \dots, a_{i-1}) \} \\
+\end{align}
+$$
+
+
+    Samples. One sequence is one sample. A batch is comprised of one or more samples.
+    Time Steps. One time step is one point of observation in the sample.
+    Features. One feature is one observation at a time step.
 Il modello utilizzato è il seguente
 
 
 ```python
-look_back = 1
+look_back = 10
 
 model = Sequential()
 model.add(LSTM(4, input_shape=(1, look_back)))
