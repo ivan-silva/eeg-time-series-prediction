@@ -15,11 +15,11 @@ from sklearn.metrics import mean_squared_error
 
 from plotutils import plot_predictions
 
-TRAIN_SPLIT = 0.67
-LOOK_BACK = 1
+VERBOSE = 2
+
 INPUT_CSV_FILE = "data/sessions/subject_1.csv"
 CSV_SEP = ","
-INPUT_COLUMNS = [
+sel_features = [
     "Alfa1",
     "Alfa2",
     "Beta1",
@@ -29,7 +29,11 @@ INPUT_COLUMNS = [
     "Gamma2",
     "Theta"
 ]
-PREDICTION_COLUMN = "Alfa2"
+
+TRAIN_SPLIT = 0.67
+LOOK_BACK = 1
+BATCH_SIZE = 1
+EPOCHS = 100
 
 
 # convert an array of values into a dataset matrix
@@ -47,75 +51,58 @@ np.random.seed(7)
 
 # load the dataset
 dataframe = pd.read_csv(INPUT_CSV_FILE, sep=CSV_SEP, na_values=-1)
+m = dataframe.shape[0]
+n_features = len(sel_features)
+dataset = np.zeros(shape=(m, n_features))
 
-m_dataset = np.zeros(shape=(len(dataframe[PREDICTION_COLUMN]), len(INPUT_COLUMNS)))
-for i, column in enumerate(INPUT_COLUMNS):
-    col_values = dataframe[column].values
-    m_dataset[:, i] = np.array(col_values).transpose()
-    m_dataset[:, i] = m_dataset[:, i].astype('float32')
+print(f"Only {n_features} of {len(dataframe.index)} total feature will be used.")
+print(f"Selected features:", sel_features)
 
-dataset = dataframe[PREDICTION_COLUMN].values
-dataset = np.array([dataset]).transpose()
-dataset = dataset.astype('float32')
+# Choose only selected features in dataset
+for i, feature in enumerate(sel_features):
+    col_values = dataframe[feature].values
+    dataset[:, i] = np.array(col_values).transpose()
+    dataset[:, i] = dataset[:, i].astype('float32')
 
 # normalize the dataset
 scaler = MinMaxScaler(feature_range=(0, 1))
 dataset = scaler.fit_transform(dataset)
-m_dataset = scaler.fit_transform(m_dataset)
 
 # split into train and test sets
-train_size = int(len(dataset) * TRAIN_SPLIT)
-test_size = len(dataset) - train_size
-train, test = dataset[0:train_size, :], dataset[train_size:len(dataset), :]
-
-m_train = m_dataset[0:train_size, :]
-m_test = m_dataset[train_size:len(dataset), :]
+train_size = int(m * TRAIN_SPLIT)
+train = dataset[0:train_size, :]
+test = dataset[train_size:m, :]
 
 # reshape into X=t and Y=t+1
-train_input, train_target = create_dataset(train, LOOK_BACK)
-test_input, test_target = create_dataset(test, LOOK_BACK)
+assert len(train) > 0, "Train array length must me > 0"
 
-assert len(m_train) > 0, "Train array length must me > 0"
-
-mt = m_train.shape[0]
-n_features = m_train.shape[1]
-m_train_input = np.zeros((mt - LOOK_BACK, LOOK_BACK, n_features))
-m_train_target = np.zeros((mt - LOOK_BACK, n_features))
+mt = train_size
+train_input = np.zeros((mt - LOOK_BACK, LOOK_BACK, n_features))
+train_target = np.zeros((mt - LOOK_BACK, n_features))
 for i in range(n_features):
-    train_col = m_train[:, i]
+    train_col = train[:, i]
     train_col = np.array([train_col]).transpose()
     col_train_input, col_train_target = create_dataset(train_col, LOOK_BACK)
-    m_train_input[:, :, i] = col_train_input
-    m_train_target[:, i] = col_train_target
+    train_input[:, :, i] = col_train_input
+    train_target[:, i] = col_train_target
 
-mv = m_test.shape[0]
-m_test_input = np.zeros((mv - LOOK_BACK, LOOK_BACK, n_features))
-m_test_target = np.zeros((mv - LOOK_BACK, n_features))
+mv = test.shape[0]
+test_input = np.zeros((mv - LOOK_BACK, LOOK_BACK, n_features))
+test_target = np.zeros((mv - LOOK_BACK, n_features))
 for i in range(n_features):
-    test_col = m_test[:, i]
+    test_col = test[:, i]
     test_col = np.array([test_col]).transpose()
     col_test_input, col_test_target = create_dataset(test_col, LOOK_BACK)
-    m_test_input[:, :, i] = col_test_input
-    m_test_target[:, i] = col_test_target
+    test_input[:, :, i] = col_test_input
+    test_target[:, i] = col_test_target
 
 print(f"Train input:target shape = {train_input.shape}:{train_target.shape}")
 print(f"Test input:target shape = {test_input.shape}:{test_target.shape}")
-print(f"Train input:target shape = {m_train_input.shape}:{m_train_target.shape}")
-print(f"Test input:target shape = {m_test_input.shape}:{m_test_target.shape}")
 
-# reshape input to be [samples, time steps, features]
-# Samples. One sequence is one sample. A batch is comprised of one or more samples.
-# Time Steps. One time step is one point of observation in the sample.
-# # Features. One feature is one observation at a time step.
-# train_input = np.reshape(train_input, (train_input.shape[0], 1, n_features))
-# test_input = np.reshape(test_input, (test_input.shape[0], 1, n_features))
-#
-# m_train_input = np.reshape(m_train_input, (m_train_input.shape[0], 1, m_train_input.shape[1]))
-# m_test_input = np.reshape(m_test_input, (m_test_input.shape[0], 1, m_test_input.shape[1]))
-
-print("Reshape input to be [samples, time steps, features]")
-print(f"Train input:target shape after reshaping = {train_input.shape}:{train_target.shape}")
-print(f"Test input:target shape after reshaping = {test_input.shape}:{test_target.shape}")
+# Input has to be in form [samples, time steps, sel_features]
+#   - Samples. One sequence is one sample. A batch is comprised of one or more samples.
+#   - Time Steps. One time step is one point of observation in the sample.
+#   - Features. One feature is one observation at a time step.
 
 # create and fit the LSTM network
 model = Sequential()
@@ -123,48 +110,47 @@ model.add(LSTM(4, input_shape=(LOOK_BACK, n_features)))
 model.add(Dense(n_features))
 model.compile(loss='mean_squared_error', optimizer='adam')
 model.summary()
-model.fit(m_train_input, m_train_target, epochs=100, batch_size=1, verbose=2)
+model.fit(train_input, train_target, epochs=EPOCHS, batch_size=BATCH_SIZE, verbose=VERBOSE)
 
 # make predictions
-m_trainPredict = model.predict(m_train_input)
-m_testPredict = model.predict(m_test_input)
+train_predict = model.predict(train_input)
+test_predict = model.predict(test_input)
 # invert predictions
-m_trainPredict = scaler.inverse_transform(m_trainPredict)
-m_train_target = scaler.inverse_transform(m_train_target)
-m_testPredict = scaler.inverse_transform(m_testPredict)
-m_test_target = scaler.inverse_transform(m_test_target)
+train_predict = scaler.inverse_transform(train_predict)
+train_target = scaler.inverse_transform(train_target)
+test_predict = scaler.inverse_transform(test_predict)
+test_target = scaler.inverse_transform(test_target)
 
 train_score = np.zeros(n_features)
 test_score = np.zeros(n_features)
 for i in range(n_features):
-
     # calculate root mean squared error
-    train_score[i] = math.sqrt(mean_squared_error(m_train_target[:, i], m_trainPredict[:, i]))
-    print(f'Train Score {INPUT_COLUMNS[i]}: {train_score[i]} RMSE')
-    test_score[i] = math.sqrt(mean_squared_error(m_test_target[:, i], m_testPredict[:, i]))
-    print(f'Test Score {INPUT_COLUMNS[i]}: {test_score[i]} RMSE')
+    train_score[i] = math.sqrt(mean_squared_error(train_target[:, i], train_predict[:, i]))
+    print(f'Train Score {sel_features[i]}: {train_score[i]} RMSE')
+    test_score[i] = math.sqrt(mean_squared_error(test_target[:, i], test_predict[:, i]))
+    print(f'Test Score {sel_features[i]}: {test_score[i]} RMSE')
 
     # shift train predictions for plotting
-    trainPredictPlot = np.empty_like(m_dataset)
+    trainPredictPlot = np.empty_like(dataset)
     trainPredictPlot[:, :] = np.nan
-    trainPredictPlot[LOOK_BACK:train_size, i] = m_trainPredict[:, i]
+    trainPredictPlot[LOOK_BACK:train_size, i] = train_predict[:, i]
     # shift test predictions for plotting
-    testPredictPlot = np.empty_like(m_dataset)
+    testPredictPlot = np.empty_like(dataset)
     testPredictPlot[:, :] = np.nan
-    testPredictPlot[train_size + LOOK_BACK:len(m_dataset), i] = m_testPredict[:, i]
+    testPredictPlot[train_size + LOOK_BACK:len(dataset), i] = test_predict[:, i]
 
-    plt.title(f"Predictions {INPUT_COLUMNS[i]}")
-    t_dataset = scaler.inverse_transform(m_dataset)
-    plt.plot(t_dataset[:, i], label=f"{INPUT_COLUMNS[i]}", linestyle="-")
+    plt.title(f"Predictions {sel_features[i]}")
+    t_dataset = scaler.inverse_transform(dataset)
+    plt.plot(t_dataset[:, i], label=f"{sel_features[i]}", linestyle="-")
     plt.plot(trainPredictPlot[:, i], label="Train predictions", linestyle="-", fillstyle='none')
     plt.plot(testPredictPlot[:, i], label="Validation predictions", linestyle="-", fillstyle='none')
 
     plt.legend()
-    plt.savefig(f'plots\\eeg_multiple_predictions_{INPUT_COLUMNS[i]}.png')
+    plt.savefig(f'plots\\eeg_multiple_predictions_{sel_features[i]}.png')
     plt.show()
     plt.close()
 
-df = pd.DataFrame({"Train RMSE": train_score, "Validation RMSE": test_score}, index=INPUT_COLUMNS)
+df = pd.DataFrame({"Train RMSE": train_score, "Validation RMSE": test_score}, index=sel_features)
 ax = df.plot.bar(color=["SkyBlue", "IndianRed"], rot=0, title="RMSE")
 ax.set_xlabel("Feature")
 plt.show()
