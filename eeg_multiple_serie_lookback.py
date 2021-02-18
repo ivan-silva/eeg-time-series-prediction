@@ -16,7 +16,7 @@ from sklearn.metrics import mean_squared_error
 from plotutils import plot_predictions
 
 TRAIN_SPLIT = 0.67
-LOOK_BACK = 10
+LOOK_BACK = 1
 INPUT_CSV_FILE = "data/sessions/subject_1.csv"
 CSV_SEP = ","
 INPUT_COLUMNS = [
@@ -154,7 +154,6 @@ for i in range(n_features):
     testPredictPlot[train_size + LOOK_BACK:len(m_dataset), i] = m_testPredict[:, i]
 
     plt.title(f"Predictions {INPUT_COLUMNS[i]}")
-    # plt.plot(m_dataset[:, i], label=f"{INPUT_COLUMNS[i]}", linestyle="-")
     t_dataset = scaler.inverse_transform(m_dataset)
     plt.plot(t_dataset[:, i], label=f"{INPUT_COLUMNS[i]}", linestyle="-")
     plt.plot(trainPredictPlot[:, i], label="Train predictions", linestyle="-", fillstyle='none')
@@ -164,3 +163,8 @@ for i in range(n_features):
     plt.savefig(f'plots\\eeg_multiple_predictions_{INPUT_COLUMNS[i]}.png')
     plt.show()
     plt.close()
+
+df = pd.DataFrame({"Train RMSE": train_score, "Validation RMSE": test_score}, index=INPUT_COLUMNS)
+ax = df.plot.bar(color=["SkyBlue", "IndianRed"], rot=0, title="RMSE")
+ax.set_xlabel("Feature")
+plt.show()
