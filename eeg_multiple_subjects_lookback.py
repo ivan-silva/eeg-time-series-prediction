@@ -159,7 +159,7 @@ plt.show()
 plt.close()
 
 df = pd.DataFrame({"Train RMSE": train_score, "Validation RMSE": test_score}, index=sel_features)
-ax = df.plot.bar(color=["SkyBlue", "IndianRed"], rot=0, title="RMSE")
+ax = df.plot.bar(color=["SkyBlue", "IndianRed"], rot=0, title=f"RMSE, lookback={LOOK_BACK}, {EPOCHS} epochs")
 ax.set_xlabel("Feature")
 ax.set_xticklabels(sel_features, rotation=45)
 plt.tight_layout()

@@ -102,66 +102,7 @@ I parametri del training invece sono
  epochs = 100
 ```
 
-## Training loss e predizioni
 
-Come atteso, si nota una **correlazione** tra il numero delle epochs, la tendenza del training e validation loss e la qualità delle predizioni, questo è un buon segno.
-
-L’accuratezza molto elevata delle predizioni, soprattutto nei canali *alfa1* e *alfa2* fa temere ci sia un problema nell’impostazione del problema, **la previsione era di non ottenere così buone predizioni**, con un dataset così limitato.
-
-I canali *delta* e *theta* ad una prima lettura dei grafici di training e validation loss, sembrano presentare un problema di **overfitting**.
-
-### Alfa1
-
-![loss_val_loss_Alfa1](images/loss_val_loss_Alfa1.png)
-![dataset_predictions_Alfa1](images/dataset_predictions_Alfa1.png)
-
-### Alfa2
-
-![loss_val_loss_Alfa2](images/loss_val_loss_Alfa2.png)
-![dataset_predictions_Alfa2](images/dataset_predictions_Alfa2.png)
-
-### Beta1
-
-![loss_val_loss_Beta1](images/loss_val_loss_Beta1.png)
-![dataset_predictions_Beta1](images/dataset_predictions_Beta1.png)
-
-### Beta 2
-
-![loss_val_loss_Beta2](images/loss_val_loss_Beta2.png)
-![dataset_predictions_Beta2](images/dataset_predictions_Beta2.png)
-
-### Delta
-
-![loss_val_loss_Delta](images/loss_val_loss_Delta.png)
-![dataset_predictions_Delta](images/dataset_predictions_Delta.png)
-
-### Gamma1
-
-![loss_val_loss_Gamma1](images/loss_val_loss_Gamma1.png)
-![dataset_predictions_Gamma1](images/dataset_predictions_Gamma1.png)
-
-### Gamma2
-
-![loss_val_loss_Gamma2](images/loss_val_loss_Gamma2.png)
-![dataset_predictions_Gamma2](images/dataset_predictions_Gamma2.png)
-
-### Theta
-
-![loss_val_loss_Theta](images/loss_val_loss_Theta.png)
-![dataset_predictions_Theta](images/dataset_predictions_Theta.png)
-
-## Conclusioni al 9/02/21
-
-Alcune parti del processo non mi sono ancora del tutto chiare ma la cosa che più mi preoccupa sono alcune predizioni eccessivamente corrette. Temo possa essere stato impostato male il problema.
-
-Prossimi passi:
-
-- Mischiare dati di soggetti differenti
-- Migliorare la consapevolezza sull’esperimento
-- Automatizzare per ogni canale in ingresso
-  - La produzione dei modelli e delle predizioni
-  - La produzione dei plot
-- Creare multiplot
 
 ## Categorizzazione e risoluzione di problemi
 
@@ -178,7 +119,7 @@ a_1 \\ a_2 \\ \vdots \\ a_m
 \end{bmatrix}
 $$
 
-dove $|dataset| = m$
+dove $|dataset| = m$.
 
 #### Model e train
 
@@ -279,6 +220,10 @@ P_{val} &= \{a_i, \ {ts + L}<i\le n : p_i = model.predict((a_{i-L}, \dots, a_{i-
 \end{align}
 $$
 
+## Data una sequenza bidimensionale predirne il continuo
+
+TODO
+
 
     Samples. One sequence is one sample. A batch is comprised of one or more samples.
     Time Steps. One time step is one point of observation in the sample.
@@ -287,11 +232,37 @@ Il modello utilizzato è il seguente
 
 
 ```python
-look_back = 10
-
-model = Sequential()
-model.add(LSTM(4, input_shape=(1, look_back)))
-model.add(Dense(1))
-model.compile(loss='mean_squared_error', optimizer='adam')
-model.fit(trainX, trainY, epochs=100, batch_size=1, verbose=2)
+Model: "sequential"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+lstm (LSTM)                  (None, 4)                 176       
+_________________________________________________________________
+dense (Dense)                (None, 6)                 30        
+=================================================================
+Total params: 206
+Trainable params: 206
+Non-trainable params: 0
+_________________________________________________________________
 ```
+
+## Sperimentazione per un parametro su più soggetti
+
+![Previsioni](images/eeg_multiple_subjects_predictions_1_100.png)
+
+![RMSE](images/eeg_multiple_subjects_RMSE_1_100.png)
+
+## Conclusioni
+
+### 9/02/21
+
+Alcune parti del processo non mi sono ancora del tutto chiare ma la cosa che più mi preoccupa sono alcune predizioni eccessivamente corrette. Temo possa essere stato impostato male il problema.
+
+Prossimi passi:
+
+- Mischiare dati di soggetti differenti
+- Migliorare la consapevolezza sull’esperimento
+- Automatizzare per ogni canale in ingresso
+  - La produzione dei modelli e delle predizioni
+  - La produzione dei plot
+- Creare multiplot
