@@ -51,7 +51,7 @@ Per queste prime prove è stato deciso di rimuovere i parametri calcolati, *atte
 6. Gamma2
 7. Theta
 
-I parametri sono stati poi stati portati all’interno di un intervallo $[0,1]$ tramite `MinMaxScaler((-1, 1))`.
+I parametri sono stati poi stati portati all’interno di un intervallo <img src="https://rawgit.com/ivan-silva/eeg-time-series-prediction/None/svgs/acf5ce819219b95070be2dbeb8a671e9.svg?invert_in_darkmode" align=middle width=32.87674500000001pt height=24.65759999999998pt/> tramite `MinMaxScaler((-1, 1))`.
 
 ![normalized_parameters](images/normalized_parameters.png)
 
@@ -110,114 +110,24 @@ I parametri del training invece sono
 #### Dati
 
 Array colonna di dati float
-$$
-dataset = (a_1, a_2, \dots, a_m)' =
+<p align="center"><img src="https://rawgit.com/ivan-silva/eeg-time-series-prediction/None/svgs/38eb638562e89df43865efc029e1b4db.svg?invert_in_darkmode" align=middle width=428.96534999999994pt height=118.102875pt/></p>
 
-\begin{bmatrix}
-a_1 \\ a_2 \\ \vdots \\ a_m
-\end{bmatrix}
-$$
-
-dove $|dataset| = m$.
+dove <img src="https://rawgit.com/ivan-silva/eeg-time-series-prediction/None/svgs/16543fa87f68ed614d2a31ead6a8e985.svg?invert_in_darkmode" align=middle width=98.64937499999999pt height=24.65759999999998pt/>.
 
 #### Model e train
 
-Prendiamo i dati e scegliamo un indice $i$ che divida tra quelli che useremo per l’allenamento e quelli invece che useremo per la validazione
-$$
-\begin{align}
-train &= (a_1, a_2, \dots, a_{i})' \\
-val &= (a_{i+1}, a_{i+2}, \dots, a_m)'
-\end{align}
-$$
-Sia per i dati di allenamento che per i dati di validazione, generiamo le variabili $input_{L}(x)$ e il $target_L(y)$, dove $L$ è la variabile di *look back* che ci dice quanti elementi vengono tenuti in considerazione per indovinare l’elemento $a_{L+1}$-esimo
-$$
-\begin{align}
-&\begin{cases}
-input_1 &= (a_1, a_2, \dots, a_{m-1})'
-\\
-target_1 &= (a_{2}, a_{3}, \dots, a_m)'
-\end{cases}
-\\
-&\begin{cases}
-input_2 &=
-((a_1, a_2), (a_2, a_3) \dots,(a_{n-2}, a_{m-1}) )'
-\\
-target_2 &= (a_{3}, a_{4}, \dots, a_m)'
-\end{cases}
-\\
-&\vdots
-\\
-&\begin{cases}
-input_L &= ((a_1, a_2, \dots, a_{L}),\dots,((a_{m-L}, a_{m-(L-1)}, \dots, a_{m-2}, a_{m-1})) )'
-\\
-target_L &= (a_{L+1}, \dots, a_m)'
-\end{cases}
-\end{align}
-$$
+Prendiamo i dati e scegliamo un indice <img src="https://rawgit.com/ivan-silva/eeg-time-series-prediction/None/svgs/77a3b857d53fb44e33b53e4c8b68351a.svg?invert_in_darkmode" align=middle width=5.663295000000005pt height=21.683310000000006pt/> che divida tra quelli che useremo per l’allenamento e quelli invece che useremo per la validazione
+<p align="center"><img src="https://rawgit.com/ivan-silva/eeg-time-series-prediction/None/svgs/0d8f6f79f9d5d0c426ad432f328c9bb8.svg?invert_in_darkmode" align=middle width=203.14469999999997pt height=41.947125pt/></p>
+Sia per i dati di allenamento che per i dati di validazione, generiamo le variabili <img src="https://rawgit.com/ivan-silva/eeg-time-series-prediction/None/svgs/f3fce9efeb06bb9860c2ae7824f1b5ea.svg?invert_in_darkmode" align=middle width=71.1678pt height=24.65759999999998pt/> e il <img src="https://rawgit.com/ivan-silva/eeg-time-series-prediction/None/svgs/9100cff2b7c6723c7fe41d214a78b617.svg?invert_in_darkmode" align=middle width=75.79374pt height=24.65759999999998pt/>, dove <img src="https://rawgit.com/ivan-silva/eeg-time-series-prediction/None/svgs/ddcb483302ed36a59286424aa5e0be17.svg?invert_in_darkmode" align=middle width=11.187330000000003pt height=22.46574pt/> è la variabile di *look back* che ci dice quanti elementi vengono tenuti in considerazione per indovinare l’elemento <img src="https://rawgit.com/ivan-silva/eeg-time-series-prediction/None/svgs/a87c614260ec1f63d9fad08c6c6896eb.svg?invert_in_darkmode" align=middle width=34.351515pt height=14.155350000000013pt/>-esimo
+<p align="center"><img src="https://rawgit.com/ivan-silva/eeg-time-series-prediction/None/svgs/53af44ee1b73d92ab49902230f89224e.svg?invert_in_darkmode" align=middle width=525.26595pt height=198.3399pt/></p>
 in forma matriciale
-$$
-\begin{array}{}
+<p align="center"><img src="https://rawgit.com/ivan-silva/eeg-time-series-prediction/None/svgs/1711f86741b6e59c47a875a6e5197708.svg?invert_in_darkmode" align=middle width=454.15425pt height=257.51714999999996pt/></p>
 
-I^{(m-L) \times (L)} =
-\begin{pmatrix}
-a_1 & a_2 & \dots & a_{L-1} & a_{L} \\
-a_2 & a_3 & \dots & a_{L} & a_{L+1} \\
-a_3 & a_4 & \dots & a_{L+1} & a_{L+2} \\
-\vdots & & & & \vdots\\
-a_{(m-1)-L} & a_{(m-1)-(L-1)} & \dots & a_{m-3} & a_{m-2}\\
-a_{m-L} & a_{m-(L-1)} &\dots & a_{m-2} &a_{m-1}
-\end{pmatrix}
+Esempio per <img src="https://rawgit.com/ivan-silva/eeg-time-series-prediction/None/svgs/a34bf513818fb6b7feb806c09a7be0ec.svg?invert_in_darkmode" align=middle width=235.814205pt height=24.65759999999998pt/>, <img src="https://rawgit.com/ivan-silva/eeg-time-series-prediction/None/svgs/e0fa8739d51886edf01d4354e14daca2.svg?invert_in_darkmode" align=middle width=61.00842pt height=21.18732pt/>, <img src="https://rawgit.com/ivan-silva/eeg-time-series-prediction/None/svgs/365c83bbd9bde4ad1973bd65896b2410.svg?invert_in_darkmode" align=middle width=49.543395pt height=22.46574pt/>
+<p align="center"><img src="https://rawgit.com/ivan-silva/eeg-time-series-prediction/None/svgs/c94bd6ade074478cbab06617a7dc4b70.svg?invert_in_darkmode" align=middle width=406.2564pt height=257.51714999999996pt/></p>
 
-&
-T^{m-L \times 1}=
-\begin{pmatrix}
-a_{L+1} \\
-a_{L+2} \\
-a_{L+3} \\
-\vdots \\
-a_{m-1} \\
-a_{m} \\
-\end{pmatrix}
-
-\end{array}
-$$
-
-Esempio per $dataset = \{ x \in N: 0< x \le 100 \}$, $m = 100$, $L=10$
-$$
-\begin{array}{}
-
-I^{90 \times 10} =
-\begin{pmatrix}
-1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 \\
-2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 & 11 \\
-3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 & 11 & 12 \\
-\vdots \\
-98 & 90 & 91 & 92 & 93 & 94 & 95 & 96 & 97 & 98 \\
-90 & 91 & 92 & 93 & 94 & 95 & 96 & 97 & 98 & 99 \\
-\end{pmatrix}
-
-&
-T^{90 \times 1}=
-\begin{pmatrix}
-11 \\
-12 \\
-13 \\
-\vdots \\
-99 \\
-100 \\
-\end{pmatrix}
-
-\end{array}
-$$
-
-Prendiamo un valore di split $0<ts<$ abbiamo che le predizioni saranno
-$$
-\begin{align}
-|p_t| &= m - L \\
-P_{train} &= \{a_i, \ {L}<i\le ts : p_i = model.predict((a_{i-L}, \dots, a_{i-1}) \} \\
-P_{val} &= \{a_i, \ {ts + L}<i\le n : p_i = model.predict((a_{i-L}, \dots, a_{i-1}) \} \\
-\end{align}
-$$
+Prendiamo un valore di split <img src="https://rawgit.com/ivan-silva/eeg-time-series-prediction/None/svgs/998349a36ffd1b307d7e3fd4c956cda5.svg?invert_in_darkmode" align=middle width=61.130025pt height=21.18732pt/> abbiamo che le predizioni saranno
+<p align="center"><img src="https://rawgit.com/ivan-silva/eeg-time-series-prediction/None/svgs/17bfcf58a49e0393bd39f755fdaefff7.svg?invert_in_darkmode" align=middle width=481.27694999999994pt height=65.75349pt/></p>
 
 ## Data una sequenza bidimensionale predirne il continuo
 
