@@ -1,11 +1,11 @@
 # Analisi di eeg come serie temporali
 
-Lo scopo di questo progetto è analizzare tracciati elettroencefalografici (eeg) e predirne il comportamento tramite 
+Lo scopo di questo progetto è analizzare tracciati elettroencefalografici (eeg) ed predirne il comportamento tramite 
 reti neurali.
 
 Le procedure vengono descritte nel dettaglio nei seguenti files:
 
-- [Procedura completa](docs/procedure.ipynb)
+- [Procedura completa](https://colab.research.google.com/github/ivan-silva/eeg-time-series-prediction/blob/master/docs/procedure.ipynb)
 
 ## Testbench
 
