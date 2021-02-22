@@ -1,6 +1,6 @@
 # Analisi di eeg come serie temporali
 
-Lo scopo di questo progetto è analizzare tracciati elettroencefalografici (eeg) ed predirne il comportamento tramite 
+Lo scopo di questo progetto è analizzare tracciati elettroencefalografici (eeg) e predirne il comportamento tramite 
 reti neurali.
 
 Le procedure vengono descritte nel dettaglio nei seguenti files:
