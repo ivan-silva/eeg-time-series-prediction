@@ -5,6 +5,7 @@ from data_loading import csv_to_dataframe
 import pandas as pd
 from matplotlib import pyplot as plt
 import numpy as np
+import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import LSTM, Dense
@@ -40,6 +41,11 @@ def generic_multiple_series_lookback(
         na_values=-1
 
 ):
+
+    # Cuda setup
+    physical_devices = tf.config.list_physical_devices('GPU')
+    tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
+
     # fix random seed for reproducibility
     np.random.seed(7)
 
