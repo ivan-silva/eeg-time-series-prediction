@@ -40,7 +40,8 @@ def generic_multiple_series_lookback(
         epochs=100,
         verbose=2,
         plot_prefix="",
-        na_values=-1
+        na_values=-1,
+        ncols=2
 
 ):
     # Cuda setup
@@ -124,6 +125,11 @@ def generic_multiple_series_lookback(
     # make predictions
     train_predict = model.predict(train_input)
     test_predict = model.predict(test_input)
+
+    # rec_test_predict = np.zeros(test_predict)
+    # for i in range(len(test_input)):
+    #     current_prediction = model.predict(test_)
+
     # invert predictions
     train_predict = scaler.inverse_transform(train_predict)
     train_target = scaler.inverse_transform(train_target)
@@ -134,8 +140,9 @@ def generic_multiple_series_lookback(
     test_score = np.zeros(n_features)
 
     nrows = int(n_features / ncols)
+    figsize = (9*ncols, 6*nrows)
     fig, axes = plt.subplots(
-        nrows=nrows, ncols=ncols, figsize=(15, 20), dpi=300, facecolor="w", edgecolor="k"
+        nrows=nrows, figsize=figsize, ncols=ncols, dpi=160, facecolor="w", edgecolor="k"
     )
     fig.suptitle(f'Predictions, lookback={look_back}, {epochs} epochs')
     for i in range(n_features):
@@ -156,13 +163,18 @@ def generic_multiple_series_lookback(
         t_dataset = scaler.inverse_transform(dataset)
 
         # Plot
-        row = int(i // ncols)
-        col = i % ncols
-        axes[row, col].set_title(f"{sel_features[i]}")
-        axes[row, col].plot(t_dataset[:, i], label=f"{sel_features[i]}", linestyle="-")
-        axes[row, col].plot(trainPredictPlot[:, i], label="Train predictions", linestyle="-", fillstyle='none')
-        axes[row, col].plot(testPredictPlot[:, i], label="Validation predictions", linestyle="-", fillstyle='none')
-        axes[row, col].legend()
+        if n_features > 1:
+            row = int(i // ncols)
+            col = i % ncols
+            cur_axes = axes[row, col]
+        else:
+            cur_axes = axes
+
+        cur_axes.set_title(f"{sel_features[i]}")
+        cur_axes.plot(t_dataset[:, i], label=f"{sel_features[i]}", linestyle="-")
+        cur_axes.plot(trainPredictPlot[:, i], label="Train predictions", linestyle="-", fillstyle='none')
+        cur_axes.plot(testPredictPlot[:, i], label="Validation predictions", linestyle="-", fillstyle='none')
+        cur_axes.legend()
 
     plt.savefig(f'plots\\{plot_prefix}_predictions_{look_back}_{epochs}.png')
     plt.show()
