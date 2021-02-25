@@ -1,3 +1,5 @@
+import os
+
 from sklearn.metrics import confusion_matrix
 from sklearn.preprocessing import MinMaxScaler
 
@@ -33,7 +35,7 @@ def generic_multiple_series_lookback(
         csv_sep=",",
         train_split=0.67,
         look_back=1,
-        lstm_units = 4,
+        lstm_units=4,
         batch_size=1,
         epochs=100,
         verbose=2,
@@ -41,7 +43,6 @@ def generic_multiple_series_lookback(
         na_values=-1
 
 ):
-
     # Cuda setup
     physical_devices = tf.config.list_physical_devices('GPU')
     tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
@@ -110,7 +111,15 @@ def generic_multiple_series_lookback(
     model.add(Dense(n_features))
     model.compile(loss='mean_squared_error', optimizer='adam')
     model.summary()
-    model.fit(train_input, train_target, epochs=epochs, batch_size=batch_size, verbose=verbose)
+    
+    model_path = f'models/{plot_prefix}_model'
+    if os.path.isdir(model_path):
+        print('Model checkpoint found, skipping training')
+        model = keras.models.load_model(model_path)
+    else:
+        print('Model checkpoint not found, training model...')
+        model.fit(train_input, train_target, epochs=epochs, batch_size=batch_size, verbose=verbose)
+        model.save(model_path)
 
     # make predictions
     train_predict = model.predict(train_input)
@@ -124,7 +133,6 @@ def generic_multiple_series_lookback(
     train_score = np.zeros(n_features)
     test_score = np.zeros(n_features)
 
-    ncols = 2
     nrows = int(n_features / ncols)
     fig, axes = plt.subplots(
         nrows=nrows, ncols=ncols, figsize=(15, 20), dpi=300, facecolor="w", edgecolor="k"
