@@ -13,6 +13,7 @@ Categorizzazione e risoluzione di problemi
 
 1. [Data una sequenza monodimensionale predirne il continuo](https://colab.research.google.com/github/ivan-silva/eeg-time-series-prediction/blob/master/docs/problem_monodimensional_data_serie_lookback.ipynb)
 2. [Data una sequenza multidimensionale predirne il continuo](https://colab.research.google.com/github/ivan-silva/eeg-time-series-prediction/blob/master/docs/problem_multidimensional_data_serie_lookback.ipynb)
+3. [Previsione multi-step ricorsiva](https://colab.research.google.com/github/ivan-silva/eeg-time-series-prediction/blob/master/docs/recursive_multi_step.ipynb)
 
 ## Testbench
 
@@ -21,9 +22,16 @@ Qui vengono raccolte le applicazioni delle tecniche descritte nelle procedure:
   - LSTM con lookback
     1. [Canale Alfa1 (valori medi) su multipli soggetti](testbench_1.ipynb)
     2. [Canali multipli (raw data) su singolo soggetto](testbench_2.ipynb)
+  - LSTM con lookback, multi-step ricorsiva
+    1. [Canale Alfa1 (valori medi) su multipli soggetti](testbench_1_recursive.ipynb)
+    2. [Canali multipli (raw data) su singolo soggetto](testbench_2_recursive.ipynb)
     
 
 ## Diario
+
+### 27/02/21
+
+È stata introdotta una predizione multi-step ricorsiva ma come previsto, gli errori si sommano e in alcuni casi la previsione collassa verso un punto fisso. Può avere una sua applicazione ma va valutato attentamente il numero di step e il look-back associato.
 
 ### 22/02/21
 

@@ -41,7 +41,8 @@ def generic_multiple_series_lookback(
         verbose=2,
         plot_prefix="",
         na_values=-1,
-        ncols=2
+        ncols=2,
+        force_retrain=True
 
 ):
     # Cuda setup
@@ -57,7 +58,7 @@ def generic_multiple_series_lookback(
     n_features = len(sel_features)
     dataset = np.zeros(shape=(m, n_features))
 
-    print(f"Only {n_features} of {len(dataframe.index)} total feature will be used.")
+    print(f"Only {n_features} of {dataframe.shape[1]} total feature will be used.")
     print(f"Selected features:", sel_features)
 
     # Choose only selected features in dataset
@@ -112,13 +113,18 @@ def generic_multiple_series_lookback(
     model.add(Dense(n_features))
     model.compile(loss='mean_squared_error', optimizer='adam')
     model.summary()
-    
+
     model_path = f'models/{plot_prefix}_model'
-    if os.path.isdir(model_path):
+    if force_retrain is False and os.path.isdir(model_path):
         print('Model checkpoint found, skipping training')
+        print(f'Loading model {model_path}...')
         model = keras.models.load_model(model_path)
+        print(f'Model loaded')
     else:
-        print('Model checkpoint not found, training model...')
+        if force_retrain:
+            print('Force retrain set. Use force_retrain=False to keep trained model.')
+
+        print('Training model...')
         model.fit(train_input, train_target, epochs=epochs, batch_size=batch_size, verbose=verbose)
         model.save(model_path)
 
@@ -126,21 +132,35 @@ def generic_multiple_series_lookback(
     train_predict = model.predict(train_input)
     test_predict = model.predict(test_input)
 
-    # rec_test_predict = np.zeros(test_predict)
-    # for i in range(len(test_input)):
-    #     current_prediction = model.predict(test_)
+    rec_test_predict = np.zeros_like(test_target)
+    # Ricorsivamente
+    # Il primo passo avrò L valori e predirrò il valore L+1, poi andrò in base alle predizioni
+    # 0,1,2 -> p1
+    # 1,2,p1 -> p2
+    # 2,p1,p2 -> p3
+    # p1,p2,p3 -> p4
+    # Con lookback L avremo L passi dove usiamo i valori di validazione. In un caso corretto probabilmente dovremmo
+    # usare i vecchi valori di train.
+
+    rec_test_predict[0:look_back, :] = test_input[0, :, :]
+
+    for i in range(look_back, mv - look_back):
+        pred_input = np.expand_dims(rec_test_predict[i - look_back:i, :], axis=0)
+        current_prediction = model.predict(pred_input)
+        rec_test_predict[i, :] = current_prediction
 
     # invert predictions
     train_predict = scaler.inverse_transform(train_predict)
     train_target = scaler.inverse_transform(train_target)
     test_predict = scaler.inverse_transform(test_predict)
     test_target = scaler.inverse_transform(test_target)
+    rec_test_predict = scaler.inverse_transform(rec_test_predict)
 
     train_score = np.zeros(n_features)
     test_score = np.zeros(n_features)
 
     nrows = int(n_features / ncols)
-    figsize = (9*ncols, 6*nrows)
+    figsize = (9 * ncols, 6 * nrows)
     fig, axes = plt.subplots(
         nrows=nrows, figsize=figsize, ncols=ncols, dpi=160, facecolor="w", edgecolor="k"
     )
@@ -162,6 +182,11 @@ def generic_multiple_series_lookback(
         testPredictPlot[train_size + look_back:len(dataset), i] = test_predict[:, i]
         t_dataset = scaler.inverse_transform(dataset)
 
+        # shift recursive predictions for plotting
+        rec_testPredictPlot = np.empty_like(dataset)
+        rec_testPredictPlot[:, :] = np.nan
+        rec_testPredictPlot[train_size + look_back:len(dataset), i] = rec_test_predict[:, i]
+
         # Plot
         if n_features > 1:
             row = int(i // ncols)
@@ -174,6 +199,7 @@ def generic_multiple_series_lookback(
         cur_axes.plot(t_dataset[:, i], label=f"{sel_features[i]}", linestyle="-")
         cur_axes.plot(trainPredictPlot[:, i], label="Train predictions", linestyle="-", fillstyle='none')
         cur_axes.plot(testPredictPlot[:, i], label="Validation predictions", linestyle="-", fillstyle='none')
+        cur_axes.plot(rec_testPredictPlot[:, i], label="Recursive predictions", linestyle="-", fillstyle='none')
         cur_axes.legend()
 
     plt.savefig(f'plots\\{plot_prefix}_predictions_{look_back}_{epochs}.png')
