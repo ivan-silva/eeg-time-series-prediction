@@ -175,13 +175,7 @@ for s in range(1, smoothening_range):
         )
         print(s_e_dataframe.head())
 
-        # Define model
-        model = Sequential()
-        model.add(Dense(500, input_dim=n_features * 2 + 1, activation="relu"))
-        model.add(Dense(100, activation="relu"))
-        model.add(Dense(50, activation="relu"))
-        model.add(Dense(1))
-        model.compile(loss="mean_squared_error", optimizer="adam", metrics=["mean_squared_error"])
+
         # model.summary() #Print model Summary
 
         # Effettuiamo il processo per ogni target
@@ -216,7 +210,14 @@ for s in range(1, smoothening_range):
                 # print(f"Train y:")
                 # print(y_train)
                 # print(pd.DataFrame(X_train, columns=p_dataframe.columns))
-                model.fit(X_train, y_train, epochs=20, verbose=0)
+                # Define model
+                model = Sequential()
+                model.add(Dense(500, input_dim=n_features * 2 + 1, activation="relu"))
+                model.add(Dense(100, activation="relu"))
+                model.add(Dense(50, activation="relu"))
+                model.add(Dense(1))
+                model.compile(loss="mean_squared_error", optimizer="adam", metrics=["mean_squared_error"])
+                model.fit(X_train, y_train, epochs=50, verbose=0)
 
                 prediction = model.predict(X_val)
                 print(f"Predicted {target_label}={prediction}. Real value={y_val}. Error={y_val-prediction}")
