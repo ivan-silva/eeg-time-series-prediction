@@ -73,9 +73,9 @@ n_targets = len(target_labels)
 
 print(f"Selected features:", sel_features)
 # Run configuration
-replays = 2
-smoothing_factor = 5
+smoothing_factor = 77
 epochs = 100
+verbose = 0
 
 
 # We reduce dataset to one value per parameter via a function
@@ -115,10 +115,6 @@ for i, input_csv_file in enumerate(input_csv_files):
         first_features_mean[i, j] = smoothing_function(col_values[:smoothing_factor])
         last_features_mean[i, j] = smoothing_function(col_values[(len(col_values) - smoothing_factor):])
 
-print("Generated dataset: ", first_features_mean)
-dataframe = pd.DataFrame(first_features_mean, columns=sel_features)
-print(dataframe.describe())
-
 first_features_names = list(map(lambda feature_name: f"{feature_name}_start", sel_features))
 last_feature_names = list(map(lambda feature_name: f"{feature_name}_end", sel_features))
 s_e_dataframe = pd.DataFrame(
@@ -152,7 +148,7 @@ for i, target_label in enumerate(target_labels):
     # Specific train set for n-1 subjects with 1 subject as validation
     for j in range(n_subjects):
         print(f"-------------------------------------------------------------------------------")
-        print(f"{target_label} dataset for subject {j+1}")
+        print(f"{target_label} dataset for subject {j + 1}")
 
         # Train set generation with index != j
         X_train = p_dataframe.loc[p_dataframe.index != j].values
@@ -169,11 +165,6 @@ for i, target_label in enumerate(target_labels):
         print(f"Train y:")
         print(y_train)
 
-        # Replays to average out results
-        test_rmse_i = np.zeros((replays, n_targets))
-        test_mae_i = np.zeros((replays, n_targets))
-        # for r in range(replays):
-
         # Train
         # print(f"Replay = {r}")
         # Model definition
@@ -184,11 +175,11 @@ for i, target_label in enumerate(target_labels):
         model.add(Dense(1))
         model.compile(loss="mean_squared_error", optimizer="adam", metrics=["mean_squared_error"])
         # model.summary()
-        model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=epochs, verbose=2)
+        model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=epochs, verbose=verbose)
 
         # Predict
         prediction = model.predict(X_val)
-        print(f"Predicted {target_label}={prediction}. Real value={y_val}. Error={y_val-prediction}")
+        print(f"Predicted {target_label}={prediction}. Real value={y_val}. Error={y_val - prediction}")
         predictions[j, i] = prediction
 
         # Train errors
@@ -206,6 +197,15 @@ print(predictions)
 print("Real final values")
 print(targets)
 
+
+# Trend prediction
+trend_real = np.array(initial_targets) < np.array(targets.values)
+trend_predicted = np.array(initial_targets) < np.array(predictions.values)
+trend_correct = trend_real == trend_predicted
+trend_percentage = 100/(trend_real.shape[0] * trend_real.shape[1]) * np.sum(trend_correct)
+print(f"Trend prediction {trend_percentage}% correct")
+print(trend_correct)
+
 # Target errors
 rmse = np.zeros(n_targets)
 mae = np.zeros(n_targets)
@@ -221,32 +221,38 @@ df = pd.DataFrame({
     "Validation RMSE": rmse,
     "Validation MAE": mae,
 }, index=target_labels)
-ax = df.plot.bar(color=["IndianRed", "Brown", "SkyBlue"], rot=0, title=f"Target errors")
+ax = df.plot.bar(color=["IndianRed", "Brown", "SkyBlue"], rot=0, title=f"Target errors, {epochs} epochs")
 ax.set_xlabel("Feature")
 ax.set_xticklabels(target_labels, rotation=45)
 plt.tight_layout()
-plt.savefig(f'{plot_dir}{plot_prefix}_errors.png', bbox_inches="tight")
+plt.savefig(f'{plot_dir}{plot_prefix}_errors_{epochs}.png', bbox_inches="tight")
 plt.show()
 
 # Subject errors
-rmse_s = np.zeros(n_subjects)
-mae_s = np.zeros(n_subjects)
+train_rmse_s = np.zeros(n_subjects)
+train_mae_s = np.zeros(n_subjects)
+test_rmse_s = np.zeros(n_subjects)
+test_mae_s = np.zeros(n_subjects)
 for i in range(n_subjects):
-    rmse_s[i] = math.sqrt(mean_squared_error(targets.iloc[i].values, predictions.iloc[i].values))
-    mae_s[i] = mean_absolute_error(targets.iloc[i].values, predictions.iloc[i].values)
+    train_rmse_s[i] = math.sqrt(mean_squared_error(targets.iloc[i].values, predictions.iloc[i].values))
+    train_mae_s[i] = mean_absolute_error(targets.iloc[i].values, predictions.iloc[i].values)
+    test_rmse_s[i] = math.sqrt(mean_squared_error(targets.iloc[i].values, predictions.iloc[i].values))
+    test_mae_s[i] = mean_absolute_error(targets.iloc[i].values, predictions.iloc[i].values)
 print("Subject RMSE")
-print(rmse_s)
+print(test_rmse_s)
 print("Subject MAE")
-print(mae_s)
+print(test_mae_s)
 
 df = pd.DataFrame({
-    "Validation RMSE": rmse_s,
-    "Validation MAE": mae_s,
+    "Train RMSE": train_rmse_s,
+    "Train MAE": train_rmse_s,
+    "Validation RMSE": test_rmse_s,
+    "Validation MAE": test_mae_s,
 })
-ax = df.plot.bar(color=["IndianRed", "Brown", "SkyBlue"], rot=0, title=f"Subject errors")
+ax = df.plot.bar(color=["SkyBlue", "IndianRed", "Brown"], rot=0, title=f"Subject errors, {epochs} epochs")
 ax.set_xlabel("Feature")
 plt.tight_layout()
-plt.savefig(f'{plot_dir}{plot_prefix}_subject_errors.png', bbox_inches="tight")
+plt.savefig(f'{plot_dir}{plot_prefix}_subject_errors_{epochs}.png', bbox_inches="tight")
 plt.show()
 
 #
@@ -277,5 +283,3 @@ plt.show()
 #     # plt.plot(test_rmse[i, :], label=f"Test RMSE {target_label}", linestyle="-", fillstyle='none')
 #     plt.legend()
 # plt.show()
-
-
