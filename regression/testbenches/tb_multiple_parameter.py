@@ -62,6 +62,12 @@ target_labels = [
     "IML",
     "IVE",
     "QI",
+    "Hamilton",
+    "STAI-1",
+    "STAI-2",
+    "SPM-Age",
+    "SPM-Scolar",
+    "Gender"
 ]
 csv_sep = ","
 na_values = -1
@@ -192,6 +198,8 @@ for i, target_label in enumerate(target_labels):
         #     test_mae_i[r, t] = mean_absolute_error(targets[target], predictions[target])
 
 predictions = pd.DataFrame(predictions, columns=target_labels)
+print("Initial values")
+print(initial_targets)
 print("Predictions")
 print(predictions)
 print("Real final values")
