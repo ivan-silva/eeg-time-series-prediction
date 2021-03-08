@@ -18,6 +18,7 @@ import math
 from sklearn.metrics import mean_squared_error
 from scipy import stats
 
+from keras.layers import GaussianNoise
 from plotutils import plot_predictions
 
 # Test score prediction from eeg (Keras-Regression vs Multiple Regression)
@@ -59,15 +60,15 @@ sel_features = [
 target_labels = [
     "ICV",
     "IRP",
-    "IML",
-    "IVE",
-    "QI",
-    "Hamilton",
-    "STAI-1",
-    "STAI-2",
-    "SPM-Age",
-    "SPM-Scolar",
-    "Gender"
+    # "IML",
+    # "IVE",
+    # "QI",
+    # "Hamilton",
+    # "STAI-1",
+    # "STAI-2",
+    # "SPM-Age",
+    # "SPM-Scolar",
+    # "Gender"
 ]
 csv_sep = ","
 na_values = -1
@@ -81,12 +82,24 @@ print(f"Selected features:", sel_features)
 # Run configuration
 smoothing_factor = 77
 epochs = 100
-verbose = 0
+verbose = 2
+# sigma = [0, 1, 2, 4, 8, 50, 500]
+sigma = 1
+n = 500
 
 
 # We reduce dataset to one value per parameter via a function
 def smoothing_function(params):
     return np.average(params)
+
+
+def noise(X, y, n, sigma):
+    _X = X.copy()
+    _y = y.copy()
+    for _ in range(n):
+        X = np.r_[X, _X + np.random.randn(*_X.shape)*sigma]
+        y = np.r_[y, _y]
+    return X, y
 
 
 # Set targets and initial targets
@@ -159,11 +172,13 @@ for i, target_label in enumerate(target_labels):
         # Train set generation with index != j
         X_train = p_dataframe.loc[p_dataframe.index != j].values
         y_train = targets[target_label].loc[targets.index != j].values
+        X_train, y_train = noise(X_train, y_train, n, sigma)
         y_train = np.expand_dims(y_train, axis=1)
 
         # Validation set generation with index == j
         X_val = p_dataframe.loc[p_dataframe.index == j].values
         y_val = targets[target_label].loc[targets.index == j].values
+        # X_val, y_val = noise(X_val, y_val, n, sigma)
         y_val = np.expand_dims(y_val, axis=1)
 
         print(f"Train X: {X_train.shape}")
@@ -207,12 +222,12 @@ print(targets)
 
 
 # Trend prediction
-trend_real = np.array(initial_targets) < np.array(targets.values)
-trend_predicted = np.array(initial_targets) < np.array(predictions.values)
-trend_correct = trend_real == trend_predicted
-trend_percentage = 100/(trend_real.shape[0] * trend_real.shape[1]) * np.sum(trend_correct)
-print(f"Trend prediction {trend_percentage}% correct")
-print(trend_correct)
+# trend_real = np.array(initial_targets) < np.array(targets.values)
+# trend_predicted = np.array(initial_targets) < np.array(predictions.values)
+# trend_correct = trend_real == trend_predicted
+# trend_percentage = 100/(trend_real.shape[0] * trend_real.shape[1]) * np.sum(trend_correct)
+# print(f"Trend prediction {trend_percentage}% correct")
+# print(trend_correct)
 
 # Target errors
 rmse = np.zeros(n_targets)
@@ -232,36 +247,38 @@ df = pd.DataFrame({
 ax = df.plot.bar(color=["IndianRed", "Brown", "SkyBlue"], rot=0, title=f"Target errors, {epochs} epochs")
 ax.set_xlabel("Feature")
 ax.set_xticklabels(target_labels, rotation=45)
+plt.ylim([0, 25])
 plt.tight_layout()
 plt.savefig(f'{plot_dir}{plot_prefix}_errors_{epochs}.png', bbox_inches="tight")
 plt.show()
 
-# Subject errors
-train_rmse_s = np.zeros(n_subjects)
-train_mae_s = np.zeros(n_subjects)
-test_rmse_s = np.zeros(n_subjects)
-test_mae_s = np.zeros(n_subjects)
-for i in range(n_subjects):
-    train_rmse_s[i] = math.sqrt(mean_squared_error(targets.iloc[i].values, predictions.iloc[i].values))
-    train_mae_s[i] = mean_absolute_error(targets.iloc[i].values, predictions.iloc[i].values)
-    test_rmse_s[i] = math.sqrt(mean_squared_error(targets.iloc[i].values, predictions.iloc[i].values))
-    test_mae_s[i] = mean_absolute_error(targets.iloc[i].values, predictions.iloc[i].values)
-print("Subject RMSE")
-print(test_rmse_s)
-print("Subject MAE")
-print(test_mae_s)
-
-df = pd.DataFrame({
-    "Train RMSE": train_rmse_s,
-    "Train MAE": train_rmse_s,
-    "Validation RMSE": test_rmse_s,
-    "Validation MAE": test_mae_s,
-})
-ax = df.plot.bar(color=["SkyBlue", "IndianRed", "Brown"], rot=0, title=f"Subject errors, {epochs} epochs")
-ax.set_xlabel("Feature")
-plt.tight_layout()
-plt.savefig(f'{plot_dir}{plot_prefix}_subject_errors_{epochs}.png', bbox_inches="tight")
-plt.show()
+# # Subject errors
+# train_rmse_s = np.zeros(n_subjects)
+# train_mae_s = np.zeros(n_subjects)
+# test_rmse_s = np.zeros(n_subjects)
+# test_mae_s = np.zeros(n_subjects)
+# for i in range(n_subjects):
+#     train_rmse_s[i] = math.sqrt(mean_squared_error(targets.iloc[i].values, predictions.iloc[i].values))
+#     train_mae_s[i] = mean_absolute_error(targets.iloc[i].values, predictions.iloc[i].values)
+#     test_rmse_s[i] = math.sqrt(mean_squared_error(targets.iloc[i].values, predictions.iloc[i].values))
+#     test_mae_s[i] = mean_absolute_error(targets.iloc[i].values, predictions.iloc[i].values)
+# print("Subject RMSE")
+# print(test_rmse_s)
+# print("Subject MAE")
+# print(test_mae_s)
+#
+# df = pd.DataFrame({
+#     "Train RMSE": train_rmse_s,
+#     "Train MAE": train_rmse_s,
+#     "Validation RMSE": test_rmse_s,
+#     "Validation MAE": test_mae_s,
+# })
+# ax = df.plot.bar(color=["SkyBlue", "IndianRed", "Brown"], rot=0, title=f"Subject errors, {epochs} epochs")
+# ax.set_xlabel("Feature")
+# plt.ylim([0, 25])
+# plt.tight_layout()
+# plt.savefig(f'{plot_dir}{plot_prefix}_subject_errors_{epochs}.png', bbox_inches="tight")
+# plt.show()
 
 #
 #     test_rmse[:, i] = np.average(test_rmse_i, axis=0)
