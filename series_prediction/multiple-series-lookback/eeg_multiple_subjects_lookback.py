@@ -1,23 +1,17 @@
-from sklearn.metrics import confusion_matrix
 from sklearn.preprocessing import MinMaxScaler
 
-from data_loading import csv_to_dataframe
+from config.param import DATA_DIR, PLOT_DIR
 import pandas as pd
 from matplotlib import pyplot as plt
 import numpy as np
-from tensorflow import keras
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import LSTM, Dense
-from tensorflow.keras.callbacks import EarlyStopping
-from tensorflow.keras.optimizers import Adam
 import math
 from sklearn.metrics import mean_squared_error
 
-from plotutils import plot_predictions
-
 VERBOSE = 2
 
-INPUT_CSV_FILE = "data/sessions/multi_subject_alfa_1.csv"
+INPUT_CSV_FILE = f"{DATA_DIR}/sessions/multi_subject_alfa_1.csv"
 CSV_SEP = ","
 sel_features = [
     "Subject1, Alfa1",
@@ -33,6 +27,7 @@ LOOK_BACK = 1
 BATCH_SIZE = 1
 EPOCHS = 100
 PLOT_PREFIX = "eeg_multiple_subjects"
+
 
 # convert an array of values into a dataset matrix
 def create_dataset(dataset, look_back=1):
@@ -154,7 +149,7 @@ for i in range(n_features):
     axes[row, col].plot(testPredictPlot[:, i], label="Validation predictions", linestyle="-", fillstyle='none')
     axes[row, col].legend()
 
-plt.savefig(f'plots\\{PLOT_PREFIX}_predictions_{LOOK_BACK}_{EPOCHS}.png')
+plt.savefig(f"{PLOT_DIR}/{PLOT_PREFIX}_predictions_{LOOK_BACK}_{EPOCHS}.png")
 plt.show()
 plt.close()
 
@@ -163,5 +158,5 @@ ax = df.plot.bar(color=["SkyBlue", "IndianRed"], rot=0, title=f"RMSE, lookback={
 ax.set_xlabel("Feature")
 ax.set_xticklabels(sel_features, rotation=45)
 plt.tight_layout()
-plt.savefig(f'plots\\{PLOT_PREFIX}_RMSE_{LOOK_BACK}_{EPOCHS}.png', bbox_inches="tight")
+plt.savefig(f"{PLOT_DIR}/{PLOT_PREFIX}_RMSE_{LOOK_BACK}_{EPOCHS}.png", bbox_inches="tight")
 plt.show()

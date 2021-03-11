@@ -20,11 +20,11 @@ Categorizzazione e risoluzione di problemi
 Qui vengono raccolte le applicazioni delle tecniche descritte nelle procedure:
 
   - LSTM con lookback
-    1. [Canale Alfa1 (valori medi) su multipli soggetti](testbench_1.ipynb)
-    2. [Canali multipli (raw data) su singolo soggetto](testbench_2.ipynb)
+    1. [Canale Alfa1 (valori medi) su multipli soggetti](series_prediction/multiple-series-lookback/testbenches/testbench_1.ipynb)
+    2. [Canali multipli (raw data) su singolo soggetto](series_prediction/multiple-series-lookback/testbenches/testbench_2.ipynb)
   - LSTM con lookback, multi-step ricorsiva
-    1. [Canale Alfa1 (valori medi) su multipli soggetti](testbench_1_recursive.ipynb)
-    2. [Canali multipli (raw data) su singolo soggetto](testbench_2_recursive.ipynb)
+    1. [Canale Alfa1 (valori medi) su multipli soggetti](series_prediction/multiple-series-lookback/testbenches/testbench_1_recursive.ipynb)
+    2. [Canali multipli (raw data) su singolo soggetto](series_prediction/multiple-series-lookback/testbenches/testbench_2_recursive.ipynb)
     
 
 ## Diario

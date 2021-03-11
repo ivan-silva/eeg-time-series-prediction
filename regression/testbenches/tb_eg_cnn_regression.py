@@ -1,25 +1,14 @@
-import os
+from sklearn.metrics import mean_absolute_error
+from keras.layers import Conv1D, Flatten
 
-from sklearn.metrics import confusion_matrix, mean_absolute_error
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler
-from keras.layers import Dense, Conv1D, Flatten
-
-from data_loading import csv_to_dataframe
+from config.param import DATA_DIR, PLOT_DIR
 import pandas as pd
 from matplotlib import pyplot as plt
 import numpy as np
-import tensorflow as tf
-from tensorflow import keras
 from tensorflow.keras import Sequential
-from tensorflow.keras.layers import LSTM, Dense
-from tensorflow.keras.callbacks import EarlyStopping
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.layers import Dense
 import math
 from sklearn.metrics import mean_squared_error
-from scipy import stats
-
-from plotutils import plot_predictions
 
 # Test score prediction from eeg (Keras-Regression vs Multiple Regression)
 
@@ -66,8 +55,8 @@ target_labels = [
 ]
 csv_sep = ","
 na_values = -1
-data_dir = "..\\..\\data\\sessions\\"
-plot_dir = "..\\..\\plots\\"
+data_dir = f"{DATA_DIR}/sessions/"
+plot_dir = f"{PLOT_DIR}/"
 n_features = len(sel_features)
 n_subjects = len(input_csv_files)
 n_targets = len(target_labels)

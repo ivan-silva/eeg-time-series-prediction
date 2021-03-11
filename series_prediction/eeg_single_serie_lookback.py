@@ -1,27 +1,25 @@
-from sklearn.metrics import confusion_matrix
 from sklearn.preprocessing import MinMaxScaler
 
-from data_loading import csv_to_dataframe
+from config.param import DATA_DIR
 import pandas as pd
-from matplotlib import pyplot as plt
 import numpy as np
-from tensorflow import keras
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import LSTM, Dense
-from tensorflow.keras.callbacks import EarlyStopping
-from tensorflow.keras.optimizers import Adam
 import math
 from sklearn.metrics import mean_squared_error
 
-from plotutils import plot_predictions
+from utils.plotutils import plot_predictions
 
 TRAIN_SPLIT = 0.67
 LOOK_BACK = 1
-INPUT_CSV_FILE = "data/sessions/subject_1.csv"
-# INPUT_CSV_FILE = "data/airline-passengers.csv"
+INPUT_CSV_FILE = f"{DATA_DIR}/sessions/subject_1.csv"
+# INPUT_CSV_FILE = "{DATA_DIR}/airline-passengers.csv"
 CSV_SEP = ","
 PREDICTION_COLUMN = "Alfa2"
+
+
 # PREDICTION_COLUMN = "Passengers"
+
 
 # convert an array of values into a dataset matrix
 def create_dataset(dataset, look_back=1):
@@ -31,6 +29,7 @@ def create_dataset(dataset, look_back=1):
         dataX.append(a)
         dataY.append(dataset[i + look_back, 0])
     return np.array(dataX), np.array(dataY)
+
 
 # fix random seed for reproducibility
 np.random.seed(7)
@@ -98,5 +97,3 @@ testPredictPlot[:, :] = np.nan
 testPredictPlot[len(trainPredict) + (LOOK_BACK * 2) + 1:len(dataset) - 1, :] = testPredict
 
 plot_predictions(scaler.inverse_transform(dataset), trainPredictPlot, testPredictPlot, PREDICTION_COLUMN)
-
-

@@ -1,23 +1,17 @@
-from sklearn.metrics import confusion_matrix
 from sklearn.preprocessing import MinMaxScaler
 
-from data_loading import csv_to_dataframe
+from config.param import DATA_DIR
 import pandas as pd
 from matplotlib import pyplot as plt
 import numpy as np
-from tensorflow import keras
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import LSTM, Dense
-from tensorflow.keras.callbacks import EarlyStopping
-from tensorflow.keras.optimizers import Adam
 import math
 from sklearn.metrics import mean_squared_error
 
-from plotutils import plot_predictions
-
 VERBOSE = 2
 
-INPUT_CSV_FILE = "data/sessions/subject_1.csv"
+INPUT_CSV_FILE = f'{DATA_DIR}/sessions/subject_1.csv'
 CSV_SEP = ","
 sel_features = [
     "Alfa1",
@@ -146,7 +140,7 @@ for i in range(n_features):
     plt.plot(testPredictPlot[:, i], label="Validation predictions", linestyle="-", fillstyle='none')
 
     plt.legend()
-    plt.savefig(f'plots\\eeg_multiple_predictions_{sel_features[i]}.png')
+    plt.savefig(f'plots/eeg_multiple_predictions_{sel_features[i]}.png')
     plt.show()
     plt.close()
 

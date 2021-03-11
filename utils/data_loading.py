@@ -3,8 +3,8 @@ import pandas as pd
 import tensorflow as tf
 from tensorflow import keras
 
-def csv_to_dataframe(path: str, filename: str):
 
+def csv_to_dataframe(path: str, filename: str):
     # TODO: extract configuration variables
     separator = ","
 

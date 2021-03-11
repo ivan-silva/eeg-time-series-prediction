@@ -1,24 +1,14 @@
-import os
+from sklearn.metrics import mean_absolute_error
 
-from sklearn.metrics import confusion_matrix, mean_absolute_error
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler
-
-from data_loading import csv_to_dataframe
+from config.param import DATA_DIR
 import pandas as pd
 from matplotlib import pyplot as plt
 import numpy as np
-import tensorflow as tf
-from tensorflow import keras
 from tensorflow.keras import Sequential
-from tensorflow.keras.layers import LSTM, Dense
-from tensorflow.keras.callbacks import EarlyStopping
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.layers import Dense
 import math
 from sklearn.metrics import mean_squared_error
 from scipy import stats
-
-from plotutils import plot_predictions
 
 # Test score prediction from eeg (Keras-Regression vs Multiple Regression)
 
@@ -65,7 +55,6 @@ target_labels = [
 ]
 csv_sep = ","
 na_values = -1
-data_folder = "data\\sessions\\"
 n_features = len(sel_features)
 n_files = len(input_csv_files)
 n_targets = len(target_labels)
@@ -79,21 +68,21 @@ def flattening_function(params):
 
 
 # Set targets and initial targets
-initial_targets = pd.read_csv('data\\sessions\\initial_targets.csv')
+initial_targets = pd.read_csv(f'{DATA_DIR}/sessions/initial_targets.csv')
 initial_targets.head()
-targets = pd.read_csv('data\\sessions\\targets.csv')
+targets = pd.read_csv(f'{DATA_DIR}/sessions/targets.csv')
 targets.head()
 
 # All dataset must be the same shape. We use the first dataset shape to initialize data structures and we save it
 # to check the subsequent datasets compliancy.
-dataframe = pd.read_csv(f"{data_folder}{input_csv_files[0]}", sep=csv_sep, na_values=na_values)
+dataframe = pd.read_csv(f"{DATA_DIR}/sessions/{input_csv_files[0]}", sep=csv_sep, na_values=na_values)
 m = dataframe.shape[0]
 first_features_mean = np.zeros(shape=(n_files, n_features))
 last_features_mean = np.zeros(shape=(n_files, n_features))
 
 # Errors
-smoothening_range = m-1
-errors_shape = (n_targets, smoothening_range-1)
+smoothening_range = m - 1
+errors_shape = (n_targets, smoothening_range - 1)
 test_rmse_i = np.zeros(errors_shape)
 test_mae_i = np.zeros(errors_shape)
 test_rmse_i_e = np.zeros(errors_shape)
@@ -175,7 +164,6 @@ for s in range(1, smoothening_range):
         )
         print(s_e_dataframe.head())
 
-
         # model.summary() #Print model Summary
 
         # Effettuiamo il processo per ogni target
@@ -192,11 +180,12 @@ for s in range(1, smoothening_range):
             print("Complete dataset for feature")
             # print(p_dataframe)
 
-            # Abbiamo pochi dati. Cicliamo per vedere se otteniamo informazioni, dati n sample ne usiamo n-1 per il train
+            # Abbiamo pochi dati. Cicliamo per vedere se otteniamo informazioni,
+            # dati n sample ne usiamo n-1 per il train
             # e 1 per il test.
             for j in range(n_files):
                 print(f"-------------------------------------------------------------------------------")
-                print(f"{target_label} dataset for subject {j+1}")
+                print(f"{target_label} dataset for subject {j + 1}")
 
                 X_train = p_dataframe.loc[p_dataframe.index != j].values
                 y_train = targets[target_label].loc[targets.index != j].values
@@ -220,7 +209,7 @@ for s in range(1, smoothening_range):
                 model.fit(X_train, y_train, epochs=50, verbose=0)
 
                 prediction = model.predict(X_val)
-                print(f"Predicted {target_label}={prediction}. Real value={y_val}. Error={y_val-prediction}")
+                print(f"Predicted {target_label}={prediction}. Real value={y_val}. Error={y_val - prediction}")
                 predictions[j, i] = prediction
 
         predictions = pd.DataFrame(predictions, columns=target_labels)
@@ -243,10 +232,10 @@ for s in range(1, smoothening_range):
         test_rmse_avg[p, :] = test_rmse
         test_mae_avg[p, :] = test_mae
 
-    test_rmse_i[:, s-1] = np.average(test_rmse_avg, axis=0)
-    test_rmse_i_e[:, s-1] = stats.sem(test_rmse_avg, axis=0)
-    test_mae_i[:, s-1] = np.average(test_mae_avg, axis=0)
-    test_mae_i_e[:, s-1] = stats.sem(test_mae_avg, axis=0)
+    test_rmse_i[:, s - 1] = np.average(test_rmse_avg, axis=0)
+    test_rmse_i_e[:, s - 1] = stats.sem(test_rmse_avg, axis=0)
+    test_mae_i[:, s - 1] = np.average(test_mae_avg, axis=0)
+    test_mae_i_e[:, s - 1] = stats.sem(test_mae_avg, axis=0)
 
 print("test_rmse_i")
 print(test_rmse_i)
@@ -266,16 +255,16 @@ for i, target_label in enumerate(target_labels):
     plt.legend()
 plt.show()
 
-    # print(test_rmse)
-    # df = pd.DataFrame({
-    #     "Test RMSE": test_rmse,
-    #     # "Test MSE": test_mse,
-    #     "Test MAE": test_mae,
-    #     "Average increase": score_avg_increase
-    # }, index=target_labels)
-    # ax = df.plot.bar(color=["IndianRed", "Brown", "SkyBlue"], rot=0, title=f"Eeg regression RMSE")
-    # ax.set_xlabel("Feature")
-    # ax.set_xticklabels(target_labels, rotation=45)
-    # plt.tight_layout()
-    # plt.savefig(f'plots\\{plot_prefix}_RMSE.png', bbox_inches="tight")
-    # plt.show()
+# print(test_rmse)
+# df = pd.DataFrame({
+#     "Test RMSE": test_rmse,
+#     #"Test MSE": test_mse,
+#     "Test MAE": test_mae,
+#     "Average increase": score_avg_increase
+# }, index=target_labels)
+# ax = df.plot.bar(color=["IndianRed", "Brown", "SkyBlue"], rot=0, title=f"Eeg regression RMSE")
+# ax.set_xlabel("Feature")
+# ax.set_xticklabels(target_labels, rotation=45)
+# plt.tight_layout()
+# plt.savefig(f'plots\\{plot_prefix}_RMSE.png', bbox_inches="tight")
+# plt.show()

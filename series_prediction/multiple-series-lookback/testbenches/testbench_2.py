@@ -1,6 +1,7 @@
+from config.param import DATA_DIR
 from generic_multiple_series_lookback import generic_multiple_series_lookback
 
-input_csv_file = "data/sessions_complete/eeg_subject_4.csv"
+input_csv_file = f"{DATA_DIR}/sessions_complete/eeg_subject_4.csv"
 csv_sep = ","
 sel_features = [
     "alpha1",

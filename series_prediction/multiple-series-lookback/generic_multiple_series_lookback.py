@@ -1,9 +1,8 @@
 import os
 
-from sklearn.metrics import confusion_matrix
 from sklearn.preprocessing import MinMaxScaler
 
-from data_loading import csv_to_dataframe
+from config.param import PLOT_DIR
 import pandas as pd
 from matplotlib import pyplot as plt
 import numpy as np
@@ -11,12 +10,8 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import LSTM, Dense
-from tensorflow.keras.callbacks import EarlyStopping
-from tensorflow.keras.optimizers import Adam
 import math
 from sklearn.metrics import mean_squared_error
-
-from plotutils import plot_predictions
 
 
 # convert an array of values into a dataset matrix
@@ -202,7 +197,7 @@ def generic_multiple_series_lookback(
         cur_axes.plot(rec_testPredictPlot[:, i], label="Recursive predictions", linestyle="-", fillstyle='none')
         cur_axes.legend()
 
-    plt.savefig(f'plots\\{plot_prefix}_predictions_{look_back}_{epochs}.png')
+    plt.savefig(f'{PLOT_DIR}/{plot_prefix}_predictions_{look_back}_{epochs}.png')
     plt.show()
     plt.close()
 
@@ -211,5 +206,5 @@ def generic_multiple_series_lookback(
     ax.set_xlabel("Feature")
     ax.set_xticklabels(sel_features, rotation=45)
     plt.tight_layout()
-    plt.savefig(f'plots\\{plot_prefix}_RMSE_{look_back}_{epochs}.png', bbox_inches="tight")
+    plt.savefig(f'{PLOT_DIR}/{plot_prefix}_RMSE_{look_back}_{epochs}.png', bbox_inches="tight")
     plt.show()

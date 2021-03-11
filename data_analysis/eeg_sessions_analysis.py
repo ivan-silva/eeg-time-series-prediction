@@ -1,31 +1,14 @@
-from sklearn.metrics import confusion_matrix
 from sklearn.preprocessing import MinMaxScaler
 
-from data_loading import csv_to_dataframe
-import pandas
-from zipfile import ZipFile
-import os
-import shutil
+from config.param import DATA_DIR, PLOT_DIR
 import pandas as pd
-from keras import metrics
 from matplotlib import pyplot as plt
 
-from data_loading import csv_to_dataframe
+from utils.data_loading import csv_to_dataframe
 
-import numpy as np
-import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras import Sequential
-from tensorflow.keras.layers import LSTM, Dense
-from tensorflow.keras.callbacks import EarlyStopping
-from tensorflow.keras.optimizers import Adam
 
-from plotutils import plot_confusion_matrix, plot_predictions
-
-from sklearn.metrics import mean_squared_error
-
-
-df = csv_to_dataframe("data\\sessions", "subject_4.csv")
+df = csv_to_dataframe(f"{DATA_DIR}/sessions", "subject_4.csv")
 
 # feature_keys = list(df.columns)
 titles = feature_keys = ['Alfa1', 'Alfa2', 'Beta1', 'Beta2', 'Delta', 'Gamma1', 'Gamma2', 'Theta', 'Meditazione',
@@ -45,6 +28,7 @@ colors = [
     "cyan",
 ]
 index_key = "Session"
+
 
 def show_raw_visualization(data):
     time_data = data[index_key]
@@ -66,11 +50,13 @@ def show_raw_visualization(data):
         )
         ax.legend([feature_keys[i]])
     plt.tight_layout()
-    plt.savefig('plots\\parameters_plot.png')
+    plt.savefig(f'{PLOT_DIR}/parameters_plot.png')
     plt.show()
     plt.close()
 
+
 show_raw_visualization(df)
+
 
 def show_heatmap(data):
     plt.matshow(data.corr())
@@ -84,6 +70,7 @@ def show_heatmap(data):
     plt.savefig('plots\\feature_correlation_heatmap.png', bbox_inches="tight")
     plt.show()
     plt.close()
+
 
 show_heatmap(df)
 
@@ -124,15 +111,17 @@ features.index = df[index_key]
 # Data normalization
 print("\nData normalization ======================================================================================")
 
+
 # Standard score
 def standard_score(data, train_split):
     data_mean = data[:train_split].mean(axis=0)
     data_std = data[:train_split].std(axis=0)
     return (data - data_mean) / data_std
 
+
 print("Values before normalization", features)
 df.plot(x='Session', title="Raw parameters")
-plt.savefig('plots\\raw_parameters.png')
+plt.savefig(f'{PLOT_DIR}/raw_parameters.png')
 plt.show()
 plt.close()
 
@@ -218,6 +207,7 @@ history = model.fit(
     callbacks=[es_callback, modelckpt_callback],
 )
 
+
 def visualize_loss(loss_history):
     loss = loss_history.history["loss"]
     val_loss = loss_history.history["val_loss"]
@@ -229,9 +219,10 @@ def visualize_loss(loss_history):
     plt.xlabel("Epochs")
     plt.ylabel("Loss")
     plt.legend()
-    plt.savefig(f'plots\\loss_val_loss_{titles[prediction_index]}.png')
+    plt.savefig(f'{PLOT_DIR}/loss_val_loss_{titles[prediction_index]}.png')
     plt.show()
     plt.close()
+
 
 visualize_loss(history)
 
@@ -246,8 +237,8 @@ for x, y in dataset_val:
     for prediction in single_batch_predictions:
         predictions_x.append(i)
         predictions_y.append(prediction)
-        j = j+1
-        i = i+1
+        j = j + 1
+        i = i + 1
 
 print(f'There are {len(predictions)} predictions:', predictions)
 plt.title(f"Predictions: {titles[prediction_index]}")
@@ -255,7 +246,8 @@ plt.plot(all_data[prediction_index], label="Complete dataset", linestyle="-", c=
 plt.plot(train_data[prediction_index], label="Train set", linestyle=":", marker='.', fillstyle='none')
 plt.plot(val_data[prediction_index], label="Validation set", linestyle=":", marker='.', fillstyle='none',
          c=colors[5])
-plt.plot(predictions_x, predictions_y, label=f"{titles[prediction_index]} predictions", linestyle="", marker='x', fillstyle='none')
+plt.plot(predictions_x, predictions_y, label=f"{titles[prediction_index]} predictions", linestyle="", marker='x',
+         fillstyle='none')
 plt.legend()
 plt.savefig(f'plots\\dataset_predictions_{titles[prediction_index]}.png')
 plt.show()

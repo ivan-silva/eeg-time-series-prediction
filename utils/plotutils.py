@@ -18,7 +18,8 @@ colors = [
 
 def plot_confusion_matrix(cm, classes, normalize=False, title='Confusion matrix', cmap=plt.cm.Blues):
     """
-    Questa funzione stampa una confusion matrix, la normalizzazione può essere applicata tramite il parametro `normalize=True`.
+    Questa funzione stampa una confusion matrix, la normalizzazione può essere applicata tramite il
+    parametro `normalize=True`.
     :param cm:
     :param classes:
     :param normalize:
@@ -68,6 +69,6 @@ def plot_predictions(all_data, train_predictions, val_predictions, parameter_nam
     plt.plot(train_predictions, label="Train predictions", linestyle="-", fillstyle='none')
     plt.plot(val_predictions, label="Validation predictions", linestyle="-", fillstyle='none')
     plt.legend()
-    plt.savefig(f'images\\dataset_predictions_{parameter_name}.png')
+    plt.savefig(f'images/dataset_predictions_{parameter_name}.png')
     plt.show()
     plt.close()

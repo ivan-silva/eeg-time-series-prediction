@@ -4,6 +4,7 @@ import numpy as np
 from scipy import signal
 
 # Dataset configuration
+from config.param import DATA_DIR
 
 input_csv_files = [
     "subject_1.csv",
@@ -26,7 +27,7 @@ sel_features = [
 ]
 csv_sep = ","
 na_values = -1
-data_folder = "..\\..\\data\\sessions\\"
+data_folder = f"{DATA_DIR}/sessions/"
 n_features = len(sel_features)
 n_files = len(input_csv_files)
 
@@ -42,6 +43,7 @@ def smoothing_function(Y):
     step = signal.medfilt(Y, kernel_size=3)
     return signal.medfilt(step, kernel_size=3)
     # return Y
+
 
 # All dataset must be the same shape. We use the first dataset shape to initialize data structures and we save it
 # to check the subsequent datasets compliancy.
@@ -93,6 +95,6 @@ for i in range(n_files):
         cur_axes.plot(smooth_dataset[i, j, :], label=f"{sel_features[j]}", linestyle="-")
     cur_axes.legend()
 
-plt.savefig(f'..\\..\\plots\\{plot_prefix}_smoothed_dataset_{smoothing_factor}.png')
+plt.savefig(f'plots/{plot_prefix}_smoothed_dataset_{smoothing_factor}.png')
 plt.show()
 plt.close()
