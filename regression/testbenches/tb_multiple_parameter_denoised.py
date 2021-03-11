@@ -16,7 +16,7 @@ from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.optimizers import Adam
 import math
 from sklearn.metrics import mean_squared_error
-from scipy import stats
+from scipy import stats, signal
 
 from keras.layers import GaussianNoise
 from plotutils import plot_predictions
@@ -60,15 +60,15 @@ sel_features = [
 target_labels = [
     "ICV",
     "IRP",
-    # "IML",
-    # "IVE",
-    # "QI",
-    # "Hamilton",
-    # "STAI-1",
-    # "STAI-2",
-    # "SPM-Age",
-    # "SPM-Scolar",
-    # "Gender"
+    "IML",
+    "IVE",
+    "QI",
+    "Hamilton",
+    "STAI-1",
+    "STAI-2",
+    "SPM-Age",
+    "SPM-Scolar",
+    "Gender"
 ]
 csv_sep = ","
 na_values = -1
@@ -82,15 +82,16 @@ print(f"Selected features:", sel_features)
 # Run configuration
 smoothing_factor = 77
 epochs = 100
-verbose = 2
+verbose = 0
 # sigma = [0, 1, 2, 4, 8, 50, 500]
 sigma = 1
 n = 500
 
 
 # We reduce dataset to one value per parameter via a function
-def smoothing_function(params):
-    return np.average(params)
+def smoothing_function(Y):
+    return signal.medfilt(Y, kernel_size=3)
+    # return Y
 
 
 def noise(X, y, n, sigma):
@@ -131,8 +132,10 @@ for i, input_csv_file in enumerate(input_csv_files):
     for j, feature in enumerate(sel_features):
         col_values = dataframe[feature].values
         col_values = col_values.astype('float32')
-        first_features_mean[i, j] = smoothing_function(col_values[:smoothing_factor])
-        last_features_mean[i, j] = smoothing_function(col_values[(len(col_values) - smoothing_factor):])
+
+        # col_values = smoothing_function(col_values)
+        first_features_mean[i, j] = np.average(col_values[:smoothing_factor])
+        last_features_mean[i, j] = np.average(col_values[(len(col_values) - smoothing_factor):])
 
 first_features_names = list(map(lambda feature_name: f"{feature_name}_start", sel_features))
 last_feature_names = list(map(lambda feature_name: f"{feature_name}_end", sel_features))
@@ -172,7 +175,7 @@ for i, target_label in enumerate(target_labels):
         # Train set generation with index != j
         X_train = p_dataframe.loc[p_dataframe.index != j].values
         y_train = targets[target_label].loc[targets.index != j].values
-        X_train, y_train = noise(X_train, y_train, n, sigma)
+        # X_train, y_train = noise(X_train, y_train, n, sigma)
         y_train = np.expand_dims(y_train, axis=1)
 
         # Validation set generation with index == j

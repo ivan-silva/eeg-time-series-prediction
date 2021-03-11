@@ -1,28 +1,9 @@
-import os
-import parameter as pa
-from sklearn.metrics import confusion_matrix, mean_absolute_error
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler
-
-from data_loading import csv_to_dataframe
 import pandas as pd
 from matplotlib import pyplot as plt
 import numpy as np
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import Sequential
-from tensorflow.keras.layers import LSTM, Dense
-from tensorflow.keras.callbacks import EarlyStopping
-from tensorflow.keras.optimizers import Adam
-import math
-from sklearn.metrics import mean_squared_error
-from scipy import stats
-
-from plotutils import plot_predictions
-
+from scipy import signal
 
 # Dataset configuration
-from regression.mctv1d import denoising_1D_MCTV
 
 input_csv_files = [
     "subject_1.csv",
@@ -45,7 +26,7 @@ sel_features = [
 ]
 csv_sep = ","
 na_values = -1
-data_folder = "..\\data\\sessions\\"
+data_folder = "..\\..\\data\\sessions\\"
 n_features = len(sel_features)
 n_files = len(input_csv_files)
 
@@ -58,15 +39,9 @@ sigma = 100
 
 
 def smoothing_function(Y):
-    n = len(Y)
-    lamda = np.sqrt(sigma * n) / 5
-    K = 100
-    err = 0.001
-    alpha = 0.3 / lamda
-    para = pa.Parameter(lamda, K, err, alpha)
-    # return np.average(params)
-    return denoising_1D_MCTV(Y, para)
-
+    step = signal.medfilt(Y, kernel_size=3)
+    return signal.medfilt(step, kernel_size=3)
+    # return Y
 
 # All dataset must be the same shape. We use the first dataset shape to initialize data structures and we save it
 # to check the subsequent datasets compliancy.
@@ -118,6 +93,6 @@ for i in range(n_files):
         cur_axes.plot(smooth_dataset[i, j, :], label=f"{sel_features[j]}", linestyle="-")
     cur_axes.legend()
 
-plt.savefig(f'..\\plots\\{plot_prefix}_smoothed_dataset_{smoothing_factor}.png')
+plt.savefig(f'..\\..\\plots\\{plot_prefix}_smoothed_dataset_{smoothing_factor}.png')
 plt.show()
 plt.close()
