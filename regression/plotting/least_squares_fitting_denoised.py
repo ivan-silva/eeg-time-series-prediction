@@ -1,5 +1,5 @@
 from sklearn.preprocessing import MinMaxScaler
-
+import numpy as np
 from config.param import DATA_DIR, PLOT_DIR
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -30,6 +30,12 @@ colors = [
 index_key = "Session"
 
 
+def fitting_function(x, a, b, c):
+    return a + b * x + c * x * x
+
+def smoothing_function(Y):
+    return signal.medfilt(Y, kernel_size=3)
+
 def show_raw_visualization(data):
     time_data = data[index_key]
     fig, axes = plt.subplots(
@@ -37,18 +43,24 @@ def show_raw_visualization(data):
     )
     for i in range(len(feature_keys)):
         key = feature_keys[i]
-        c = colors[i % (len(colors))]
+        color = colors[i % (len(colors))]
         t_data = data[key]
         t_data.index = time_data
         t_data.head()
         print(t_data)
-        ax = t_data.plot(
-            ax=axes[i // 2, i % 2],
-            color=c,
-            title=f"{key}",
-            rot=25,
-        )
-        ax.legend([feature_keys[i]])
+
+        # Least square fitting
+        from scipy.optimize import curve_fit
+        xdata = t_data.index
+        ydata = t_data.values
+        # Initial guess.
+        x0 = np.array([0.0, 0.0, 0.0])
+        # sigma = np.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0])
+        (a, b, c), matrix = curve_fit(fitting_function, xdata, ydata, x0)
+        yapprox = fitting_function(xdata, a, b, c)
+        ax = t_data.plot(ax=axes[i // 2, i % 2], color=color, title=f"{key}", rot=25)
+        ax.plot(xdata, yapprox)
+        ax.legend([feature_keys[i], "LSV"])
     plt.tight_layout()
     plt.savefig(f'{PLOT_DIR}/parameters_plot.png')
     plt.show()

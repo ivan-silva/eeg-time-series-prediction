@@ -40,9 +40,7 @@ sigma = 100
 
 
 def smoothing_function(Y):
-    step = signal.medfilt(Y, kernel_size=3)
-    return signal.medfilt(step, kernel_size=3)
-    # return Y
+    return signal.medfilt(Y, kernel_size=3)
 
 
 # All dataset must be the same shape. We use the first dataset shape to initialize data structures and we save it
