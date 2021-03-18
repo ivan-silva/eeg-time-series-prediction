@@ -10,7 +10,15 @@ from scipy.optimize import curve_fit
 
 from tensorflow import keras
 
-df = csv_to_dataframe(f"{DATA_DIR}/sessions", "subject_4.csv")
+plot_prefix = "lsv_denoised_"
+data_dir = f'{DATA_DIR}/sessions/'
+plot_dir = f'{PLOT_DIR}/'
+
+filename = "subject_6.csv"
+subject_name = filename.replace(".csv", "")
+subject_name = subject_name.replace("_", " ")
+subject_name = subject_name.capitalize()
+df = csv_to_dataframe(f"{DATA_DIR}/sessions", filename)
 
 # feature_keys = list(df.columns)
 titles = feature_keys = ['Alfa1', 'Alfa2', 'Beta1', 'Beta2', 'Delta', 'Gamma1', 'Gamma2', 'Theta', 'Meditazione',
@@ -35,14 +43,18 @@ index_key = "Session"
 def fitting_function(x, a, b, c):
     return a + b * x + c * x * x
 
+
 def smoothing_function(Y):
     return signal.medfilt(Y, kernel_size=3)
+
 
 def show_raw_visualization(data):
     time_data = data[index_key]
     fig, axes = plt.subplots(
         nrows=5, ncols=2, figsize=(15, 20), dpi=80, facecolor="w", edgecolor="k"
     )
+    fig.suptitle(f"{subject_name}", fontsize=22)
+    plt.set_cmap("Paired")
     for i in range(len(feature_keys)):
         key = feature_keys[i]
         color = colors[i % (len(colors))]
@@ -51,19 +63,54 @@ def show_raw_visualization(data):
         t_data.head()
         print(t_data)
 
-        # Least square fitting
+        # Denoising
         xdata = t_data.index
         ydata = t_data.values
+        y_data_s = smoothing_function(ydata)
+
+        # Least square fitting
         # Initial guess.
         x0 = np.array([0.0, 0.0, 0.0])
         # sigma = np.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0])
         (a, b, c), matrix = curve_fit(fitting_function, xdata, ydata, x0)
         yapprox = fitting_function(xdata, a, b, c)
-        ax = t_data.plot(ax=axes[i // 2, i % 2], color=color, title=f"{key}", rot=25)
-        ax.plot(xdata, yapprox)
-        ax.legend([feature_keys[i], "LSV"])
+
+        (a, b, c), matrix = curve_fit(fitting_function, xdata, y_data_s, x0)
+        yapprox_s = fitting_function(xdata, a, b, c)
+
+        # Subplot
+        ax = axes[i // 2, i % 2]
+        ax.set_title(key)
+
+        # Line plot
+        ax.plot(xdata, ydata, label="Original", )
+        ax.plot(xdata, y_data_s, label="Denoised", )
+        ax.plot(xdata, yapprox, label="Original LSV", )
+        ax.plot(xdata, yapprox_s, label="Denoised LSV", )
+
+        # Scatter plot
+        initial_value = yapprox_s[0]
+        mid_value = yapprox_s[int(len(yapprox_s) // 2)]
+        final_value = yapprox_s[len(yapprox_s) - 1]
+
+        x_offset = 2
+        y_offset = -2
+        x1, y1 = 0, initial_value
+        x2, y2 = int(len(yapprox_s) // 2), mid_value
+        x3, y3 = len(yapprox_s) - 1, final_value
+        bbox_style = dict(facecolor='white', alpha=0.5)
+
+        ax.scatter(x1, y1, color="red")
+        ax.text(x1 + x_offset, y1 + y_offset, f"{float('{:0.2f}'.format(initial_value))}", bbox=bbox_style)
+        ax.scatter(x2, y2, color="red")
+        ax.text(x2 + x_offset, y2 + y_offset, f"{float('{:0.2f}'.format(mid_value))}", bbox=bbox_style)
+        ax.scatter(x3, y3, color="red")
+        ax.text(x3 + x_offset, y3 + y_offset, f"{float('{:0.2f}'.format(final_value))}", bbox=bbox_style)
+
+        ax.legend()
+
     plt.tight_layout()
-    plt.savefig(f'{PLOT_DIR}/parameters_plot.png')
+    plt.savefig(f'{plot_dir}{plot_prefix}{subject_name}.png')
     plt.show()
     plt.close()
 
