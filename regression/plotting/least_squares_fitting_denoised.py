@@ -5,6 +5,8 @@ import pandas as pd
 from matplotlib import pyplot as plt
 
 from utils.data_loading import csv_to_dataframe
+from scipy import signal
+from scipy.optimize import curve_fit
 
 from tensorflow import keras
 
@@ -50,7 +52,6 @@ def show_raw_visualization(data):
         print(t_data)
 
         # Least square fitting
-        from scipy.optimize import curve_fit
         xdata = t_data.index
         ydata = t_data.values
         # Initial guess.

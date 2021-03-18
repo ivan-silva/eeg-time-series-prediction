@@ -70,7 +70,7 @@ n_targets = len(target_labels)
 
 print(f"Selected features:", sel_features)
 # Run configuration
-smoothing_factor = 77
+smoothing_factor = 38
 epochs = 100
 verbose = 0
 # sigma = [0, 1, 2, 4, 8, 50, 500]
@@ -103,8 +103,6 @@ targets.head()
 # to check the subsequent datasets compliancy.
 dataframe = pd.read_csv(f"{data_dir}{input_csv_files[0]}", sep=csv_sep, na_values=na_values)
 m = dataframe.shape[0]
-first_features_mean = np.zeros(shape=(n_subjects, n_features))
-last_features_mean = np.zeros(shape=(n_subjects, n_features))
 
 # Dataset generation (without targets)
 print(f"Constructing dataset with {n_subjects} files, {n_features} features, "
@@ -112,6 +110,8 @@ print(f"Constructing dataset with {n_subjects} files, {n_features} features, "
 n_smooth_values = m - (smoothing_factor - 1)
 smooth_dataset = np.zeros(shape=(n_subjects, n_features, n_smooth_values))
 
+first_features_mean = np.zeros(shape=(n_subjects, n_features))
+last_features_mean = np.zeros(shape=(n_subjects, n_features))
 for i, input_csv_file in enumerate(input_csv_files):
     # Load each file
     dataframe = pd.read_csv(f"{data_dir}{input_csv_file}", sep=csv_sep, na_values=na_values)
