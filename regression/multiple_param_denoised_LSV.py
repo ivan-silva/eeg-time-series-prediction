@@ -27,7 +27,7 @@ from scipy import signal
 #  ]
 from config.param import DATA_DIR, PLOT_DIR
 
-plot_prefix = "eeg_regression_"
+plot_prefix = "lsv_denoised_"
 input_csv_files = [
     "subject_1.csv",
     "subject_2.csv",
@@ -158,27 +158,29 @@ for i, input_csv_file in enumerate(input_csv_files):
         mid_values[i, j] = yapprox_s[int(len(yapprox_s) // 2)]
         final_values[i, j] = yapprox_s[len(yapprox_s) - 1]
 
-        subject_name = input_csv_file.replace(".csv", "")
-        subject_name = subject_name.replace("_", " ")
-        subject_name = subject_name.capitalize()
-        plt.title(f"{subject_name}, {feature}")
-        plt.plot(xdata, dataframe[feature].values, label="Original")
-        plt.plot(xdata, col_values, label="Denoised")
-        plt.plot(xdata, yapprox, label="Original LSV")
-        plt.plot(xdata, yapprox_s, label="Denoised LSV")
-        x_offset = 2
-        y_offset = -2
-        plt.scatter(0, initial_values[i, j])
-        plt.text(0+x_offset, initial_values[i, j]+y_offset, f"{float('{:0.2f}'.format(initial_values[i, j]))}",
-                 bbox=dict(facecolor='white', alpha=0.5))
-        plt.scatter(int(len(yapprox_s) // 2), mid_values[i, j])
-        plt.text(int(len(yapprox_s) // 2)+x_offset, mid_values[i, j]+y_offset, f"{float('{:0.2f}'.format(mid_values[i, j]))}",
-                 bbox=dict(facecolor='white', alpha=0.5))
-        plt.scatter(len(yapprox_s) - 1, final_values[i, j])
-        plt.text(len(yapprox_s) - 1+x_offset, final_values[i, j]+y_offset, f"{float('{:0.2f}'.format(final_values[i, j]))}",
-                 bbox=dict(facecolor='white', alpha=0.5))
-        plt.legend()
-        plt.show()
+        # Debug plot for correctness check
+        # subject_name = input_csv_file.replace(".csv", "")
+        # subject_name = subject_name.replace("_", " ")
+        # subject_name = subject_name.capitalize()
+        # plt.title(f"{subject_name}, {feature}")
+        # plt.plot(xdata, dataframe[feature].values, label="Original")
+        # plt.plot(xdata, col_values, label="Denoised")
+        # plt.plot(xdata, yapprox, label="Original LSV")
+        # plt.plot(xdata, yapprox_s, label="Denoised LSV")
+        # x_offset = 2
+        # y_offset = -2
+        # plt.scatter(0, initial_values[i, j])
+        # plt.text(0+x_offset, initial_values[i, j]+y_offset, f"{float('{:0.2f}'.format(initial_values[i, j]))}",
+        #          bbox=dict(facecolor='white', alpha=0.5))
+        # plt.scatter(int(len(yapprox_s) // 2), mid_values[i, j])
+        # plt.text(int(len(yapprox_s) // 2)+x_offset, mid_values[i, j]+y_offset, f"{float('{:0.2f}'.format(mid_values[i, j]))}",
+        #          bbox=dict(facecolor='white', alpha=0.5))
+        # plt.scatter(len(yapprox_s) - 1, final_values[i, j])
+        # plt.text(len(yapprox_s) - 1+x_offset, final_values[i, j]+y_offset, f"{float('{:0.2f}'.format(final_values[i, j]))}",
+        #          bbox=dict(facecolor='white', alpha=0.5))
+        # plt.legend()
+        # plt.savefig(f'{plot_dir}{plot_prefix}{subject_name}_{feature}.png')
+        # plt.show()
 
 first_features_names = list(map(lambda feature_name: f"{feature_name}_start", sel_features))
 mid_features_names = list(map(lambda feature_name: f"{feature_name}_mid", sel_features))
@@ -212,6 +214,7 @@ for i, target_label in enumerate(target_labels):
     )
     print("Complete dataset for feature")
     print(p_dataframe)
+    p_dataframe.to_csv(f"{DATA_DIR}/output/lsv_complete_train_dataset_{target_label}.csv")
 
     # Specific train set for n-1 subjects with 1 subject as validation
     for j in range(n_subjects):
@@ -227,7 +230,7 @@ for i, target_label in enumerate(target_labels):
         # Validation set generation with index == j
         X_val = p_dataframe.loc[p_dataframe.index == j].values
         y_val = targets[target_label].loc[targets.index == j].values
-        X_val, y_val = noise(X_val, y_val, n, sigma)
+        # X_val, y_val = noise(X_val, y_val, n, sigma)
         y_val = np.expand_dims(y_val, axis=1)
 
         print(f"Train X: {X_train.shape}")
