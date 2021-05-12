@@ -8,11 +8,13 @@ from utils.data_loading import csv_to_dataframe
 
 from tensorflow import keras
 
-df = csv_to_dataframe(f"{DATA_DIR}/sessions", "subject_4.csv")
+df = csv_to_dataframe(f"{DATA_DIR}/sessions", "subject_1.csv")
+
+del df['Meditazione']
+del df['Attenzione']
 
 # feature_keys = list(df.columns)
-titles = feature_keys = ['Alfa1', 'Alfa2', 'Beta1', 'Beta2', 'Delta', 'Gamma1', 'Gamma2', 'Theta', 'Meditazione',
-                         'Attenzione']
+titles = feature_keys = ['Alfa1', 'Alfa2', 'Beta1', 'Beta2', 'Delta', 'Gamma1', 'Gamma2', 'Theta']
 print(feature_keys)
 
 colors = [
@@ -67,7 +69,7 @@ def show_heatmap(data):
     cb = plt.colorbar()
     cb.ax.tick_params(labelsize=14)
     plt.title("Feature Correlation Heatmap", fontsize=14)
-    plt.savefig('plots\\feature_correlation_heatmap.png', bbox_inches="tight")
+    plt.savefig(f'{PLOT_DIR}/feature_correlation_heatmap.png', bbox_inches="tight")
     plt.show()
     plt.close()
 
@@ -132,7 +134,7 @@ features = scaler.fit_transform(features)
 features = pd.DataFrame(features)
 print("Values after normalization", features)
 features.plot(title="Selected parameters, normalized")
-plt.savefig('plots\\normalized_parameters.png')
+plt.savefig(f'{PLOT_DIR}/normalized_parameters.png')
 plt.show()
 plt.close()
 
@@ -249,6 +251,6 @@ plt.plot(val_data[prediction_index], label="Validation set", linestyle=":", mark
 plt.plot(predictions_x, predictions_y, label=f"{titles[prediction_index]} predictions", linestyle="", marker='x',
          fillstyle='none')
 plt.legend()
-plt.savefig(f'plots\\dataset_predictions_{titles[prediction_index]}.png')
+plt.savefig(f'{PLOT_DIR}/dataset_predictions_{titles[prediction_index]}.png')
 plt.show()
 plt.close()

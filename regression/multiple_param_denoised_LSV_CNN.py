@@ -1,5 +1,6 @@
 import statistics
 
+from keras import regularizers
 from scipy.optimize import curve_fit
 from sklearn.metrics import mean_absolute_error
 
@@ -11,7 +12,7 @@ from tensorflow.keras.layers import Dense
 import math
 from sklearn.metrics import mean_squared_error
 from scipy import signal
-from keras.layers import Conv1D, Flatten
+from keras.layers import Conv1D, Flatten, Conv2D, Dropout
 
 # Test score prediction from eeg (Keras-Regression vs Multiple Regression)
 
@@ -74,7 +75,7 @@ n_targets = len(target_labels)
 
 print(f"Selected features:", sel_features)
 # Run configuration
-epochs = 30
+epochs = 50
 verbose = 0
 
 smoothing_factor = 35
@@ -111,6 +112,7 @@ def noise(X, y, n, sigma):
         y = np.r_[y, _y]
     return X, y
 
+
 # Set targets and initial targets
 initial_targets = pd.read_csv(f'{data_dir}initial_targets.csv')
 initial_targets.head()
@@ -127,7 +129,7 @@ final_values = np.zeros(shape=(n_subjects, n_features))
 
 # Dataset generation (without targets)
 print(f"Constructing dataset with {n_subjects} files, {n_features} features")
-yapprox_s_all = np.array((n_features, n_subjects, m))
+
 for i, input_csv_file in enumerate(input_csv_files):
     # Load each file
     dataframe = pd.read_csv(f"{data_dir}{input_csv_file}", sep=csv_sep, na_values=na_values)
@@ -156,12 +158,9 @@ for i, input_csv_file in enumerate(input_csv_files):
         (a, b, c), matrix = curve_fit(fitting_function, xdata, ydata, x0)
         yapprox_s = fitting_function(xdata, a, b, c)
 
-        # initial_values[i, j] = yapprox_s[0]
-        # mid_values[i, j] = yapprox_s[int(len(yapprox_s) // 2)]
-        # final_values[i, j] = yapprox_s[len(yapprox_s) - 1]
-
-        initial_values[i, j] = ydata[:35].mean()
-        final_values[i, j] = ydata[35:].mean()
+        initial_values[i, j] = yapprox_s[0]
+        mid_values[i, j] = yapprox_s[int(len(yapprox_s) // 2)]
+        final_values[i, j] = yapprox_s[len(yapprox_s) - 1]
 
         # Debug plot for correctness check
         # subject_name = input_csv_file.replace(".csv", "")
@@ -187,24 +186,16 @@ for i, input_csv_file in enumerate(input_csv_files):
         # plt.savefig(f'{plot_dir}{plot_prefix}{subject_name}_{feature}.png')
         # plt.show()
 
-# first_features_names = list(map(lambda feature_name: f"{feature_name}_start", sel_features))
-# mid_features_names = list(map(lambda feature_name: f"{feature_name}_mid", sel_features))
-# last_feature_names = list(map(lambda feature_name: f"{feature_name}_end", sel_features))
-#
-# s_e_dataframe = pd.DataFrame(
-#     data=np.hstack((initial_values, mid_values, final_values)),
-#     columns=np.hstack((first_features_names, mid_features_names, last_feature_names))
-# )
 first_features_names = list(map(lambda feature_name: f"{feature_name}_start", sel_features))
+mid_features_names = list(map(lambda feature_name: f"{feature_name}_mid", sel_features))
 last_feature_names = list(map(lambda feature_name: f"{feature_name}_end", sel_features))
-
 s_e_dataframe = pd.DataFrame(
-    data=np.hstack((initial_values, final_values)),
-    columns=np.hstack((first_features_names, last_feature_names))
+    data=np.hstack((initial_values, mid_values, final_values)),
+    columns=np.hstack((first_features_names, mid_features_names, last_feature_names))
 )
 print(s_e_dataframe.head())
 
-input_shape = n_features * 2 + 1
+input_shape = n_features * 3 + 1
 
 # Output dataset
 predictions = np.zeros((n_subjects, n_targets))
@@ -256,22 +247,16 @@ for i, target_label in enumerate(target_labels):
         # print(f"Replay = {r}")
         # Model definition
         model = Sequential()
-
-        model.add(Dense(100, input_dim=input_shape, activation="relu"))
-        model.add(Dense(100, activation="relu"))
-        model.add(Dense(50, activation="relu"))
-        model.add(Dense(1))
-
-        # model.add(Dense(128,
-        #                 activation="relu",
-        #                 input_shape=input_shape,
-        #                 activity_regularizer=regularizers.l2(1e-5)))
-        # model.add(Dropout(0.50))
-        # model.add(Dense(128,
-        #                 activation="relu",
-        #                 activity_regularizer=regularizers.l2(1e-5)))
-        # model.add(Dropout(0.50))
-        # model.add(Dense(1, activation="relu"))
+        model.add(Dense(128,
+                        activation="relu",
+                        input_shape=input_shape,
+                        activity_regularizer=regularizers.l2(1e-5)))
+        model.add(Dropout(0.50))
+        model.add(Dense(128,
+                        activation="relu",
+                        activity_regularizer=regularizers.l2(1e-5)))
+        model.add(Dropout(0.50))
+        model.add(Dense(1, activation="relu"))
         model.compile(loss="mse", optimizer="adam")
         model.summary()
         history = model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=epochs, verbose=verbose)
@@ -282,6 +267,7 @@ for i, target_label in enumerate(target_labels):
             val_loss = loss_history.history["val_loss"]
             epochs = range(len(loss))
             plt.figure()
+            plt.ylim([0, 50])
             plt.title(f"Training loss and validation loss")
             plt.plot(epochs, loss, colors[0], label="Training loss")
             plt.plot(epochs, val_loss, colors[2], label="Validation loss")
@@ -293,7 +279,7 @@ for i, target_label in enumerate(target_labels):
             plt.close()
 
 
-        visualize_loss(history)
+        # visualize_loss(history)
 
         # Predict
         prediction = model.predict(X_val)
@@ -349,7 +335,8 @@ df = pd.DataFrame({
 }, index=target_labels)
 
 colors = ["SteelBlue", "SkyBlue", "Brown", "IndianRed"]
-ax = df.plot.bar(color=colors, rot=0, title=f"Predizione indici Av $p=35$, epochs: {epochs} ")
+ax = df.plot.bar(color=colors, rot=0, title=f"CNN LSV, {epochs} epochs")
+ax.set_xlabel("Feature")
 ax.set_xticklabels(target_labels, rotation=45)
 plt.ylim([0, 50])
 plt.tight_layout(pad=3)

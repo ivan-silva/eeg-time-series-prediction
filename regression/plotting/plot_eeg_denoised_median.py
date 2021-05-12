@@ -2,6 +2,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 import numpy as np
 from scipy import signal
+from config.param import PLOT_DIR, DATA_DIR
 
 # Dataset configuration
 from config.param import DATA_DIR
@@ -32,7 +33,7 @@ n_features = len(sel_features)
 n_files = len(input_csv_files)
 
 # Plotting configuration
-plot_prefix = "eeg_regression_"
+plot_prefix = "eeg_regression"
 smoothing_factor = 20
 
 # Denoising
@@ -93,6 +94,6 @@ for i in range(n_files):
         cur_axes.plot(smooth_dataset[i, j, :], label=f"{sel_features[j]}", linestyle="-")
     cur_axes.legend()
 
-plt.savefig(f'plots/{plot_prefix}_smoothed_dataset_{smoothing_factor}.png')
+plt.savefig(f'{PLOT_DIR}/{plot_prefix}_smoothed_dataset_{smoothing_factor}.png')
 plt.show()
 plt.close()

@@ -168,7 +168,7 @@ for i, target_label in enumerate(target_labels):
         # model.compile(loss="mean_squared_error", optimizer="adam", metrics=["mean_squared_error"])
 
         model = Sequential()
-        model.add(Conv1D(32, 2, activation="relu", input_shape=(n_features * 2 + 1, 1)))
+        model.add(Conv1D(16, 3, activation="relu", input_shape=(n_features * 2 + 1, 1)))
         model.add(Flatten())
         model.add(Dense(64, activation="relu"))
         model.add(Dense(1))
@@ -177,7 +177,27 @@ for i, target_label in enumerate(target_labels):
         model.fit(X_train, y_train, batch_size=12, epochs=200, verbose=0)
 
         # model.summary()
-        model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=epochs, verbose=verbose)
+        history = model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=epochs, verbose=verbose)
+
+        colors = ["SteelBlue", "SkyBlue", "Brown", "IndianRed"]
+        def visualize_loss(loss_history):
+            loss = loss_history.history["loss"]
+            val_loss = loss_history.history["val_loss"]
+            epochs = range(len(loss))
+            plt.figure()
+            plt.title(f"Training loss and validation loss")
+            plt.plot(epochs, loss, colors[0], label="Training loss")
+            plt.plot(epochs, val_loss, colors[2], label="Validation loss")
+            plt.xlabel("Epochs")
+            plt.ylabel("Loss")
+            plt.legend()
+            plt.savefig(f'{PLOT_DIR}/{plot_prefix}_loss_val_loss.png')
+            plt.show()
+            plt.close()
+
+
+        visualize_loss(history)
+
 
         # Predict
         prediction = model.predict(X_val)

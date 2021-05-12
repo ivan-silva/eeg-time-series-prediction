@@ -11,19 +11,11 @@ from sklearn.metrics import mean_squared_error
 
 VERBOSE = 2
 
-INPUT_CSV_FILE = f"{DATA_DIR}/sessions/multi_subject_alfa_1.csv"
+INPUT_CSV_FILE = f"{DATA_DIR}/sessions/multi_subject_alfa_2.csv"
 CSV_SEP = ","
-sel_features = [
-    "Subject1, Alfa1",
-    "Subject2, Alfa1",
-    "Subject3, Alfa1",
-    "Subject4, Alfa1",
-    "Subject5, Alfa1",
-    "Subject6, Alfa1",
-]
 
 TRAIN_SPLIT = 0.67
-LOOK_BACK = 3
+LOOK_BACK = 1
 BATCH_SIZE = 1
 EPOCHS = 100
 PLOT_PREFIX = "eeg_multiple_subjects"
@@ -44,6 +36,8 @@ np.random.seed(7)
 
 # load the dataset
 dataframe = pd.read_csv(INPUT_CSV_FILE, sep=CSV_SEP, na_values=-1)
+sel_features = dataframe.columns
+sel_features = sel_features.delete(0)
 m = dataframe.shape[0]
 n_features = len(sel_features)
 dataset = np.zeros(shape=(m, n_features))
